@@ -122,13 +122,12 @@ class BattleScene(Scene):
         self.state = "item"
 
     def _enqueue(self, lines) -> None:
+        # Show the first line now; the rest advance on each confirm. Even a
+        # single-line message stays up until the player confirms.
         if lines:
             self._messages.extend(lines)
             self._log_line = self._messages.pop(0)
         self.state = "message"
-        if not self._messages and self.state == "message":
-            # Single-line message: still require a confirm before resolving.
-            pass
 
     def _after_messages(self) -> None:
         if self._ending is not None:
