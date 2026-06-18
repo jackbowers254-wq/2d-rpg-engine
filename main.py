@@ -26,6 +26,7 @@ from engine.map.world_map import WorldMap
 from engine.save.save_manager import SaveManager
 from engine.ui.style import UIStyle
 from game.factories.entity_factory import EntityFactory
+from game.migrations import register_all
 from game.scenes.battle_scene import BattleScene
 from game.scenes.dialogue_scene import DialogueScene
 from game.scenes.inventory_scene import InventoryScene
@@ -53,6 +54,7 @@ def build_services(game: Game) -> None:
     game.world_map.discover(s.get("world.maps_path", os.path.join(data_path, "maps")))
 
     game.saves = SaveManager(s)
+    register_all(game.saves)  # save-file migrations (old saves upgrade on load)
     game.world = None  # set by the overworld scene when active
 
 

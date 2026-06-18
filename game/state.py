@@ -32,6 +32,10 @@ class GameState:
         self.consumed: Set[str] = set()
         self.current_map: str = settings.get("world.default_map", "overworld")
 
+        # Gen 2 additions (persisted; defaulted for old saves via migration v1->v2).
+        self.currency: int = settings.get("economy.starting_currency", 0)
+        self.quests: dict = {}  # quest_id -> {state, objectives:{id: progress}}
+
         # Persistent player vitals (mirrors the live player entity).
         self.player = {
             "hp": settings.get("combat.player_hp", 24),
@@ -86,6 +90,8 @@ class GameState:
             "inventory": self.inventory.to_data(),
             "flags": dict(self.flags),
             "consumed": sorted(self.consumed),
+            "currency": self.currency,
+            "quests": dict(self.quests),
         }
 
     def from_data(self, data: dict) -> None:
@@ -96,6 +102,8 @@ class GameState:
         self.inventory.from_data(data.get("inventory", {}))
         self.flags = dict(data.get("flags", {}))
         self.consumed = set(data.get("consumed", []))
+        self.currency = data.get("currency", 0)
+        self.quests = dict(data.get("quests", {}))
 
     def save_meta(self) -> dict:
         return {

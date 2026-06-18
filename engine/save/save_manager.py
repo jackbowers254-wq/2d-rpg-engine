@@ -17,6 +17,7 @@ import os
 import time
 from typing import Dict, List, Optional, Tuple
 
+from engine.save.migrations import Migrator
 from engine.utils.logger import get_logger
 
 log = get_logger("save")
@@ -28,7 +29,13 @@ class SaveManager:
         self.directory = settings.get("save.directory", "saves")
         self.slots = settings.get("save.slots", 3)
         self.version = settings.get("save.version", 1)
+        # Games register migration steps here so old saves upgrade on load.
+        self.migrator = Migrator()
         os.makedirs(self.directory, exist_ok=True)
+
+    def register_migration(self, from_version: int, func) -> None:
+        """Register a step upgrading a save payload from ``from_version`` -> +1."""
+        self.migrator.add(from_version, func)
 
     def path(self, slot: int) -> str:
         return os.path.join(self.directory, f"slot{slot}.json")
@@ -55,10 +62,14 @@ class SaveManager:
             return None
         with open(self.path(slot), "r", encoding="utf-8") as fh:
             payload = json.load(fh)
-        if payload.get("version") != self.version:
-            log.warning("Save slot %d version %s != current %s (migrate if needed)",
-                        slot, payload.get("version"), self.version)
-        return payload.get("data")
+        from_version = int(payload.get("version", 1))
+        data = payload.get("data", {})
+        if from_version < self.version:
+            data, _ = self.migrator.migrate(data, from_version, self.version)
+        elif from_version > self.version:
+            log.warning("Save slot %d is newer (v%s) than this build (v%s)",
+                        slot, from_version, self.version)
+        return data
 
     def slot_meta(self, slot: int) -> Optional[dict]:
         """Lightweight metadata for a save-select menu (or None if empty)."""

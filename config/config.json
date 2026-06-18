@@ -135,7 +135,7 @@
     "directory": "saves",
     "slots": 3,
     "autosave": false,
-    "version": 1
+    "version": 2
   },
 
   "map_streaming": {
