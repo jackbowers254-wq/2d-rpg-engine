@@ -1,0 +1,29 @@
+{
+  "_comment": "Item database. Keyed by item id. 'effects' are applied on use (see Inventory.apply_effects); 'stats' apply while equipped. icon_color is the placeholder swatch.",
+  "potion": {
+    "name": "Potion",
+    "description": "A red tonic. Restores 12 HP.",
+    "type": "consumable",
+    "value": 15,
+    "icon_color": [230, 80, 90],
+    "effects": { "heal": 12 }
+  },
+  "ether": {
+    "name": "Ether",
+    "description": "A shimmering blue vial. Restores 8 HP.",
+    "type": "consumable",
+    "value": 25,
+    "icon_color": [120, 120, 240],
+    "effects": { "heal": 8 }
+  },
+  "wood_sword": {
+    "name": "Wooden Sword",
+    "description": "A practice blade. +2 Attack while equipped.",
+    "type": "equipment",
+    "stackable": false,
+    "value": 10,
+    "icon_color": [180, 140, 80],
+    "equip_slot": "weapon",
+    "stats": { "attack": 2 }
+  }
+}

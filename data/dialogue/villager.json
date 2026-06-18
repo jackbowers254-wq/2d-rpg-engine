@@ -1,0 +1,36 @@
+{
+  "_comment": "Branching dialogue. 'choices' branch; 'requires'/'set' read & write story flags; 'give' grants an item. The 'I have!' option only appears after you've entered the cave (sets flag visited_cave).",
+  "start": "greet",
+  "nodes": {
+    "greet": {
+      "speaker": "Villager",
+      "text": "Oh! A traveler. Welcome to Greenfields, friend.",
+      "next": "ask"
+    },
+    "ask": {
+      "speaker": "Villager",
+      "text": "Have you explored the cave to the north yet?",
+      "choices": [
+        { "text": "Not yet.", "next": "warn", "set": { "knows_cave": true } },
+        { "text": "I have!", "next": "impressed", "requires": "visited_cave" },
+        { "text": "(Leave)", "next": null }
+      ]
+    },
+    "warn": {
+      "speaker": "Villager",
+      "text": "Careful—slimes lurk in the dark. Here, take this for the road.",
+      "give": "potion",
+      "next": "bye"
+    },
+    "impressed": {
+      "speaker": "Villager",
+      "text": "Brave one! They say the hollow still hides old treasures.",
+      "next": "bye"
+    },
+    "bye": {
+      "speaker": "Villager",
+      "text": "Safe travels. Press the menu key any time to rest or save.",
+      "next": null
+    }
+  }
+}

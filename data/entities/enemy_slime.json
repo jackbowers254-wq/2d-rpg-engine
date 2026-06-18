@@ -1,0 +1,15 @@
+{
+  "_comment": "An enemy. collider.trigger fires 'enemy_touch' on overlap (non-solid so it can reach the player); the overworld starts a battle. ai.behavior can be overridden per spawn (wander vs chase). stats.xp_reward is granted on defeat.",
+  "name": "Slime",
+  "type": "enemy_slime",
+  "tags": ["enemy"],
+  "components": {
+    "transform": { "facing": "down" },
+    "sprite": { "color": [120, 200, 130], "size": [12, 9], "offset": [2, 5], "layer": "entities" },
+    "movement": { "style": "smooth", "speed": 32 },
+    "collider": { "w": 12, "h": 8, "offset_x": 2, "offset_y": 5, "solid": false, "trigger": true, "trigger_event": "enemy_touch" },
+    "health": { "hp": 10, "max_hp": 10 },
+    "stats": { "attack": 4, "defense": 1, "xp_reward": 8 },
+    "ai": { "behavior": "wander", "params": { "interval": 1.2, "chance_to_move": 0.7 } }
+  }
+}

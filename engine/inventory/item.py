@@ -67,9 +67,13 @@ class ItemDatabase:
             import json
             with open(path, "r", encoding="utf-8") as fh:
                 data = json.load(fh)
-            entries = data.values() if isinstance(data, dict) else data
-            keys = data.keys() if isinstance(data, dict) else [e.get("id") for e in data]
-            for key, entry in zip(keys, entries):
+            if isinstance(data, dict):
+                # {id: {...}} mapping; skip documentation keys like "_comment".
+                pairs = [(k, v) for k, v in data.items()
+                         if not k.startswith("_") and isinstance(v, dict)]
+            else:
+                pairs = [(e.get("id"), e) for e in data]
+            for key, entry in pairs:
                 entry = dict(entry)
                 entry.setdefault("id", key)
                 self._items[entry["id"]] = ItemDef(**entry)

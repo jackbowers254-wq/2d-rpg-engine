@@ -1,0 +1,13 @@
+{
+  "_comment": "A talkable NPC. Spawn-object properties can override params (e.g. dialogue, facing). The interactable.action 'dialogue' makes the overworld push the dialogue scene with params.dialogue.",
+  "name": "Villager",
+  "type": "npc_villager",
+  "tags": ["npc"],
+  "components": {
+    "transform": { "facing": "down" },
+    "sprite": { "color": [230, 200, 120], "size": [12, 14], "offset": [2, 1], "layer": "entities" },
+    "collider": { "w": 12, "h": 9, "offset_x": 2, "offset_y": 6, "solid": true },
+    "interactable": { "action": "dialogue", "prompt": "Talk", "params": { "dialogue": "villager" }, "radius": 20 },
+    "ai": { "behavior": "idle" }
+  }
+}

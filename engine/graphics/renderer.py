@@ -266,9 +266,17 @@ class PygameRenderer(Renderer):
         rx, ry, rw, rh = rect
         screen_rect = pygame.Rect(round(rx - ox), round(ry - oy), round(rw), round(rh))
         s = (ry + rh) if sort_y is None else sort_y
-        self._layer(layer).append(
-            _DrawCmd(lambda surf: pygame.draw.rect(surf, color, screen_rect, width), s)
-        )
+        if len(color) == 4 and color[3] < 255 and width == 0:
+            # Translucent fill (e.g. dimming the screen behind a menu). pygame's
+            # draw.rect ignores alpha, so blit a per-pixel-alpha surface instead.
+            fill = pygame.Surface((screen_rect.width, screen_rect.height), pygame.SRCALPHA)
+            fill.fill(tuple(color))
+            self._layer(layer).append(
+                _DrawCmd(lambda surf: surf.blit(fill, screen_rect.topleft), s))
+        else:
+            rgb = tuple(color[:3])
+            self._layer(layer).append(
+                _DrawCmd(lambda surf: pygame.draw.rect(surf, rgb, screen_rect, width), s))
 
     def draw_line(self, start, end, color, *, layer=None, world=True, width=1):
         ox, oy = self._offset(world)

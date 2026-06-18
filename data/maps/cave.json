@@ -27,7 +27,7 @@
       {
        "name": "color",
        "type": "color",
-       "value": "#3b7d3bff"
+       "value": "#ff3b7d3b"
       }
      ]
     },
@@ -37,7 +37,7 @@
       {
        "name": "color",
        "type": "color",
-       "value": "#1b5e20ff"
+       "value": "#ff1b5e20"
       },
       {
        "name": "solid",
@@ -52,7 +52,7 @@
       {
        "name": "color",
        "type": "color",
-       "value": "#2a5fa8ff"
+       "value": "#ff2a5fa8"
       },
       {
        "name": "solid",
@@ -67,7 +67,7 @@
       {
        "name": "color",
        "type": "color",
-       "value": "#b89b72ff"
+       "value": "#ffb89b72"
       }
      ]
     },
@@ -77,7 +77,7 @@
       {
        "name": "color",
        "type": "color",
-       "value": "#5a5a64ff"
+       "value": "#ff5a5a64"
       }
      ]
     },
@@ -87,7 +87,7 @@
       {
        "name": "color",
        "type": "color",
-       "value": "#2b2b33ff"
+       "value": "#ff2b2b33"
       },
       {
        "name": "solid",

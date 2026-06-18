@@ -1,0 +1,13 @@
+{
+  "_comment": "A generic item lying in the world. Spawn-object property 'item' overrides pickup.item_id. auto=true means walking over it grabs it; it can also be grabbed by pressing interact.",
+  "name": "Item",
+  "type": "item_pickup",
+  "tags": ["item"],
+  "components": {
+    "transform": {},
+    "sprite": { "color": [245, 225, 80], "size": [8, 8], "offset": [4, 4], "layer": "objects" },
+    "collider": { "w": 12, "h": 12, "offset_x": 2, "offset_y": 2, "solid": false, "trigger": true, "trigger_event": "pickup_touch" },
+    "pickup": { "item_id": "potion", "quantity": 1, "auto": true },
+    "interactable": { "action": "pickup", "prompt": "Take", "params": {}, "radius": 16 }
+  }
+}
