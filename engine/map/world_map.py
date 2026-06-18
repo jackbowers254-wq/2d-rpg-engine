@@ -60,6 +60,9 @@ class WorldMap:
     def map_names(self) -> List[str]:
         return sorted(self._paths)
 
+    def has(self, name: str) -> bool:
+        return name in self._paths
+
     # -- access --------------------------------------------------------------
     def get(self, name: str) -> TileMap:
         if name in self._cache:

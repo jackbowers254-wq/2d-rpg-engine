@@ -40,6 +40,14 @@
     "effects": ["lighting", "particles"]
   },
 
+  "transitions": {
+    "enabled": true,
+    "type": "pixel",
+    "duration": 0.45,
+    "color": [10, 8, 16],
+    "cell": 8
+  },
+
   "player": {
     "movement_style": "smooth",
     "move_speed": 70,

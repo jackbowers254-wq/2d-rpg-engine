@@ -31,8 +31,12 @@ from engine.ecs.systems.player_controller import PlayerControllerSystem
 from engine.ecs.systems.render_system import RenderSystem
 from engine.ecs.world import World
 from engine.graphics.camera import Camera
+from engine.graphics.transitions import Transition
 from engine.ui.healthbar import HealthBar
 from engine.utils.geometry import aabb_overlap
+from engine.utils.logger import get_logger
+
+log = get_logger("overworld")
 
 
 class OverworldScene(Scene):
@@ -43,7 +47,9 @@ class OverworldScene(Scene):
         self._toast = ""
         self._toast_t = 0.0
         self._portal_cooldown = 0.0
+        self._portal_locked = True        # unlocked once the player steps off portals
         self._near_interactable = None
+        self.transition = None            # active screen Transition, if any
 
         # ECS world + systems (intent -> ai -> movement -> render).
         self.world = World(settings=g.settings, events=g.events)
@@ -98,6 +104,9 @@ class OverworldScene(Scene):
         self.world.add_entity(self.player)
         self.camera.snap_to(px + 8, py + 8)
         g.state.spawn_position = None  # consumed once used
+        # Don't let the just-arrived player immediately re-trigger a portal; they
+        # must step off any portal tile first.
+        self._portal_locked = True
 
     def _player_spawn(self, tmap, use_player_start: bool):
         g = self.game
@@ -135,6 +144,14 @@ class OverworldScene(Scene):
     def update(self, dt: float) -> None:
         g = self.game
         inp = g.input
+
+        # A screen transition freezes the world until it finishes (the map swap
+        # happens at its covered midpoint via on_cover).
+        if self.transition is not None:
+            if self.transition.update(dt):
+                self.transition = None
+            return
+
         self._portal_cooldown = max(0.0, self._portal_cooldown - dt)
         if self._toast_t > 0:
             self._toast_t -= dt
@@ -281,21 +298,57 @@ class OverworldScene(Scene):
         if self._portal_cooldown > 0:
             return
         pr = self._player_rect()
+        on_portal = None
         for portal in self.world.tilemap.find_objects("portal"):
             if aabb_overlap(*pr, portal.x, portal.y, portal.width, portal.height):
-                self._take_portal(portal)
-                return
+                on_portal = portal
+                break
+        # Step-off lock: after arriving, ignore portals until the player has
+        # moved clear of every portal (robust, no timing hacks at boundaries).
+        if self._portal_locked:
+            if on_portal is None:
+                self._portal_locked = False
+            return
+        if on_portal is not None:
+            self._take_portal(on_portal)
 
     def _take_portal(self, portal) -> None:
+        g = self.game
         p = portal.properties
         target = p.get("target_map")
+        # Validate the destination up front with a clear message instead of a crash.
         if not target:
+            log.error("Portal '%s' has no target_map", portal.name)
+            self._show_toast("Broken portal (no target_map)")
             return
-        tx = float(p.get("target_x", 0)) * self.tile_size
-        ty = float(p.get("target_y", 0)) * self.tile_size
-        self.game.state.spawn_position = (tx, ty, p.get("facing", "down"))
-        self._portal_cooldown = 0.5
-        self._load_map(target, use_player_start=False)
+        if not g.world_map.has(target):
+            log.error("Portal '%s' targets unknown map '%s' (known: %s)",
+                      portal.name, target, g.world_map.map_names)
+            self._show_toast(f"Portal target '{target}' not found")
+            return
+        dest = g.world_map.get(target)
+        txi, tyi = int(p.get("target_x", 0)), int(p.get("target_y", 0))
+        if not (0 <= txi < dest.width and 0 <= tyi < dest.height):
+            log.error("Portal '%s' target tile (%d,%d) out of bounds for '%s' (%dx%d)",
+                      portal.name, txi, tyi, target, dest.width, dest.height)
+            self._show_toast("Portal destination out of bounds")
+            return
+
+        tx, ty = txi * self.tile_size, tyi * self.tile_size
+        g.state.spawn_position = (tx, ty, p.get("facing", "down"))
+
+        def _do_change():
+            self._load_map(target, use_player_start=False)
+
+        if g.settings.get("transitions.enabled", True):
+            self.transition = Transition(
+                kind=g.settings.get("transitions.type", "fade"),
+                duration=g.settings.get("transitions.duration", 0.45),
+                color=tuple(g.settings.get("transitions.color", [0, 0, 0])),
+                cell=g.settings.get("transitions.cell", 8),
+                on_cover=_do_change)
+        else:
+            _do_change()
 
     # -- consume / persistence ----------------------------------------------
     def _consume_entity(self, entity) -> None:
@@ -329,6 +382,8 @@ class OverworldScene(Scene):
         self.world.tilemap.draw(renderer, self.camera)
         self.render_system.draw(self.world, renderer)
         self._draw_hud(renderer)
+        if self.transition is not None:
+            self.transition.draw(renderer)
 
     def _draw_hud(self, renderer) -> None:
         s = self.style
