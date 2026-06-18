@@ -168,6 +168,8 @@ class BattleScene(Scene):
 
     def _finish(self) -> None:
         g = self.game
+        # Let scripts / quests react to the outcome (e.g. a scripted boss fight).
+        g.events.publish("battle_finished", outcome=self._ending)
         if self._ending == "defeat":
             g.scenes.switch_to("title")
         else:

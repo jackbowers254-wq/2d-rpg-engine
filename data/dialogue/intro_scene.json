@@ -1,0 +1,9 @@
+{
+  "_comment": "Short linear dialogue used by the intro cutscene script.",
+  "start": "a",
+  "nodes": {
+    "a": { "speaker": "Villager", "text": "Wait, traveler! Before you wander off...", "next": "b" },
+    "b": { "speaker": "Villager", "text": "The cave to the north has been restless. Take care out there.", "next": "c" },
+    "c": { "speaker": "Villager", "text": "Here—this should help you on your way.", "next": null }
+  }
+}

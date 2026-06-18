@@ -1,0 +1,17 @@
+{
+  "_comment": "Intro cutscene. Fired by an 'enter' trigger near the village path the first time the player walks into it. Demonstrates: player lock, facing, scripted entity movement, dialogue, item gift, flag set, and a quest start. All data -- no code.",
+  "version": 1,
+  "actions": [
+    { "action": "face", "target": "player", "dir": "up" },
+    { "action": "face", "target": "villager", "toward": "player" },
+    { "action": "wait", "seconds": 0.3 },
+    { "action": "move_entity", "target": "villager", "to": [8, 12], "speed": 45 },
+    { "action": "face", "target": "villager", "toward": "player" },
+    { "action": "dialogue", "id": "intro_scene" },
+    { "action": "give_item", "item": "potion", "qty": 1 },
+    { "action": "start_quest", "quest": "clear_the_cave" },
+    { "action": "set_flag", "flag": "met_villager", "value": true },
+    { "action": "move_entity", "target": "villager", "to": [8, 10], "speed": 45 },
+    { "action": "face", "target": "villager", "dir": "down" }
+  ]
+}

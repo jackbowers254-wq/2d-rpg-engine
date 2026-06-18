@@ -127,6 +127,10 @@
     "dialogue_path": "data/dialogue"
   },
 
+  "scripting": {
+    "scripts_path": "data/scripts"
+  },
+
   "audio": {
     "enabled": true,
     "master_volume": 0.8,

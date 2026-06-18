@@ -1149,6 +1149,33 @@
        "value": "down"
       }
      ]
+    },
+    {
+     "id": 6,
+     "name": "intro_zone",
+     "type": "trigger",
+     "x": 176,
+     "y": 192,
+     "width": 48,
+     "height": 32,
+     "visible": true,
+     "properties": [
+      {
+       "name": "event",
+       "type": "string",
+       "value": "enter"
+      },
+      {
+       "name": "script",
+       "type": "string",
+       "value": "intro"
+      },
+      {
+       "name": "once",
+       "type": "bool",
+       "value": true
+      }
+     ]
     }
    ]
   }

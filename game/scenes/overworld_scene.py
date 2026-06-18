@@ -29,9 +29,12 @@ from engine.ecs.systems.animation_system import AnimationSystem
 from engine.ecs.systems.movement_system import MovementSystem
 from engine.ecs.systems.player_controller import PlayerControllerSystem
 from engine.ecs.systems.render_system import RenderSystem
+import os
+
 from engine.ecs.world import World
 from engine.graphics.camera import Camera
 from engine.graphics.transitions import Transition
+from engine.scripting.script import ScriptContext, ScriptRunner
 from engine.ui.healthbar import HealthBar
 from engine.utils.geometry import aabb_overlap
 from engine.utils.logger import get_logger
@@ -50,6 +53,9 @@ class OverworldScene(Scene):
         self._portal_locked = True        # unlocked once the player steps off portals
         self._near_interactable = None
         self.transition = None            # active screen Transition, if any
+        self.script = None                # active cutscene ScriptRunner, if any
+        self._player_locked = False        # True during a cutscene
+        self._inside_triggers = set()      # trigger names the player currently overlaps
 
         # ECS world + systems (intent -> ai -> movement -> render).
         self.world = World(settings=g.settings, events=g.events)
@@ -107,6 +113,12 @@ class OverworldScene(Scene):
         # Don't let the just-arrived player immediately re-trigger a portal; they
         # must step off any portal tile first.
         self._portal_locked = True
+        self._inside_triggers = set()
+
+        # Fire any 'load' triggers for this map (e.g. an intro on first entry).
+        for trg in tmap.find_objects("trigger"):
+            if trg.properties.get("event") == "load":
+                self._maybe_fire_trigger(trg)
 
     def _player_spawn(self, tmap, use_player_start: bool):
         g = self.game
@@ -152,6 +164,17 @@ class OverworldScene(Scene):
                 self.transition = None
             return
 
+        # Cutscene mode: advance the script (before world.update so scripted
+        # movement intent is consumed this frame), keep the world simulating
+        # (entities move), but ignore player input and triggers.
+        if self.script is not None or self._player_locked:
+            if self.script is not None:
+                self.script.update(dt)
+            self.world.update(dt)
+            t = self.player.get("transform")
+            self.camera.update(t.x + 8, t.y + 8, dt)
+            return
+
         self._portal_cooldown = max(0.0, self._portal_cooldown - dt)
         if self._toast_t > 0:
             self._toast_t -= dt
@@ -187,6 +210,7 @@ class OverworldScene(Scene):
         if self.combat_style == "encounter":
             self._update_enemy_touch()  # action style handles combat in its system
         self._update_portals()
+        self._update_triggers()
 
     # -- interactions --------------------------------------------------------
     def _player_rect(self):
@@ -214,8 +238,17 @@ class OverworldScene(Scene):
                 best, nearest = d, e
         self._near_interactable = nearest
 
-        if nearest and (inp.just_pressed("interact") or inp.just_pressed("confirm")):
+        pressed = inp.just_pressed("interact") or inp.just_pressed("confirm")
+        if nearest and pressed:
             self._interact_with(nearest)
+        elif pressed:
+            # 'interact' triggers (map objects) fire when stood on and confirmed.
+            pr = self._player_rect()
+            for trg in self.world.tilemap.find_objects("trigger"):
+                if trg.properties.get("event") == "interact" and \
+                        aabb_overlap(*pr, trg.x, trg.y, trg.width, trg.height):
+                    self._maybe_fire_trigger(trg)
+                    break
 
     def _interact_with(self, entity) -> None:
         inter = entity.get("interactable")
@@ -349,6 +382,85 @@ class OverworldScene(Scene):
                 on_cover=_do_change)
         else:
             _do_change()
+
+    # -- triggers & cutscene scripting --------------------------------------
+    def _update_triggers(self) -> None:
+        """Fire 'enter' triggers on the frame the player steps into them."""
+        pr = self._player_rect()
+        current = set()
+        for trg in self.world.tilemap.find_objects("trigger"):
+            if trg.properties.get("event", "enter") != "enter":
+                continue
+            name = trg.name or f"trg@{trg.x:.0f},{trg.y:.0f}"
+            if aabb_overlap(*pr, trg.x, trg.y, trg.width, trg.height):
+                current.add(name)
+                if name not in self._inside_triggers:
+                    self._maybe_fire_trigger(trg)
+                    if self.script is not None:  # a cutscene just started
+                        self._inside_triggers = current
+                        return
+        self._inside_triggers = current
+
+    def _trigger_condition_ok(self, props: dict) -> bool:
+        req, unless = props.get("requires"), props.get("unless")
+        if req and not self.game.state.flags.get(req):
+            return False
+        if unless and self.game.state.flags.get(unless):
+            return False
+        return True
+
+    def _maybe_fire_trigger(self, trg) -> None:
+        if self.script is not None:
+            return  # one cutscene at a time
+        props = trg.properties
+        if not self._trigger_condition_ok(props):
+            return
+        sid = f"{self.world.tilemap.name}/{trg.name}"
+        once = props.get("once", True)
+        if once and self.game.state.flags.get(f"_trg:{sid}"):
+            return
+        actions = self._load_script(props["script"]) if props.get("script") else []
+        if not actions:
+            return
+        if once:
+            self.game.state.flags[f"_trg:{sid}"] = True
+        self._start_script(actions)
+
+    def _load_script(self, script_id: str):
+        path = os.path.join(self.game.settings.get("scripting.scripts_path", "data/scripts"),
+                            f"{script_id}.json")
+        data = self.game.assets.load_json(path, cache=True)
+        return data.get("actions", []) if isinstance(data, dict) else data
+
+    def _start_script(self, actions, source=None) -> None:
+        ctx = ScriptContext(self.game, self.world, self)
+        ctx.source = source
+        self.script = ScriptRunner(actions, ctx, on_complete=self._end_cutscene)
+        self.set_player_locked(True)
+
+    def _end_cutscene(self) -> None:
+        self.script = None
+        self.set_player_locked(False)
+
+    def set_player_locked(self, locked: bool) -> None:
+        """Disable player control + movement during a cutscene (and restore)."""
+        self._player_locked = locked
+        pc = self.player.get("player_controlled")
+        if pc is not None:
+            pc.enabled = not locked
+        if locked:
+            m = self.player.get("movement")
+            if m is not None:
+                m.vx = m.vy = 0.0
+                m.input_dx = m.input_dy = 0
+
+    def warp_player(self, map_name: str, tx, ty, facing: str = "down") -> None:
+        """Scripted teleport (used by the 'teleport' action with a map)."""
+        ts = self.tile_size
+        self.game.state.spawn_position = (tx * ts, ty * ts, facing)
+        self._load_map(map_name, use_player_start=False)
+        if self._player_locked or self.script is not None:
+            self.set_player_locked(True)  # re-lock the rebuilt player entity
 
     # -- consume / persistence ----------------------------------------------
     def _consume_entity(self, entity) -> None:

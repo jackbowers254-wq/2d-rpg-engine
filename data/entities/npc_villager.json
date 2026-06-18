@@ -6,6 +6,7 @@
   "components": {
     "transform": { "facing": "down" },
     "sprite": { "color": [230, 200, 120], "size": [12, 14], "offset": [2, 1], "layer": "entities" },
+    "movement": { "style": "smooth", "speed": 40 },
     "collider": { "w": 12, "h": 9, "offset_x": 2, "offset_y": 6, "solid": true },
     "interactable": { "action": "dialogue", "prompt": "Talk", "params": { "dialogue": "villager" }, "radius": 20 },
     "ai": { "behavior": "idle" }
