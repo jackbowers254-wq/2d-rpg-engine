@@ -36,8 +36,12 @@
     "layers": ["background", "ground", "decor", "objects", "entities", "overhead", "weather", "ui", "overlay"],
     "default_entity_layer": "entities",
     "y_sort_layers": ["entities"],
-    "effects_enabled": false,
-    "effects": ["lighting", "particles"]
+    "effects_enabled": true,
+    "effects": ["lighting", "particles"],
+    "lighting_layer": "overhead",
+    "torch_radius": 56,
+    "torch_color": [255, 226, 170],
+    "particle_size": 2
   },
 
   "transitions": {

@@ -596,6 +596,50 @@
        "value": "enemy_slime"
       }
      ]
+    },
+    {
+     "id": 4,
+     "name": "torch0",
+     "type": "light",
+     "x": 64,
+     "y": 64,
+     "width": 16,
+     "height": 16,
+     "visible": true,
+     "properties": [
+      {
+       "name": "color",
+       "type": "color",
+       "value": "#ffffcf8a"
+      },
+      {
+       "name": "radius",
+       "type": "int",
+       "value": 44
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "name": "torch1",
+     "type": "light",
+     "x": 176,
+     "y": 112,
+     "width": 16,
+     "height": 16,
+     "visible": true,
+     "properties": [
+      {
+       "name": "color",
+       "type": "color",
+       "value": "#ff9ad0ff"
+      },
+      {
+       "name": "radius",
+       "type": "int",
+       "value": 40
+      }
+     ]
     }
    ]
   }
@@ -615,6 +659,11 @@
    "name": "music",
    "type": "string",
    "value": "cave.wav"
+  },
+  {
+   "name": "ambient",
+   "type": "color",
+   "value": "#ff403a52"
   }
  ]
 }

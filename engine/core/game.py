@@ -106,6 +106,7 @@ class Game:
                 break
             self.debug.update()
             self.audio.update(dt)
+            self.renderer.update_effects(dt)
             self.scenes.update(dt)
             if self.scenes.is_empty:  # last scene popped itself -> exit
                 self.running = False

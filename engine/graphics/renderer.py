@@ -317,3 +317,8 @@ class PygameRenderer(Renderer):
         """Register a post-processing / lighting / particle effect (extension)."""
         self._effects.append(effect)
         log.info("Registered render effect: %s", type(effect).__name__)
+
+    def update_effects(self, dt: float) -> None:
+        """Advance time-based effects (particles, day/night). Called per frame."""
+        for effect in self._effects:
+            effect.update(dt)

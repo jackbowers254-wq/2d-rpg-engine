@@ -57,11 +57,11 @@ class OverworldScene(Scene):
         self._player_locked = False        # True during a cutscene
         self._inside_triggers = set()      # trigger names the player currently overlaps
 
-        # Quest toasts + hit SFX (subscriptions cleaned up in on_exit).
+        # Quest toasts + hit feedback (subscriptions cleaned up in on_exit).
         self._event_unsubs = [
             g.events.subscribe("quest_started", self._on_quest_started),
             g.events.subscribe("quest_completed", self._on_quest_completed),
-            g.events.subscribe("entity_damaged", lambda **k: g.audio.play_sound("hit.wav")),
+            g.events.subscribe("entity_damaged", self._on_entity_damaged),
         ]
 
         # ECS world + systems (intent -> ai -> movement -> render).
@@ -298,6 +298,10 @@ class OverworldScene(Scene):
         item = self.game.item_db.get(pick.item_id)
         self._show_toast(f"Got {item.name if item else pick.item_id}!")
         self.game.audio.play_sound("pickup.wav")
+        if self.game.particles is not None:
+            t = entity.get("transform")
+            self.game.particles.emit_burst(t.x + 8, t.y + 8, count=10, speed=35,
+                                           life=0.5, color=(250, 240, 150))
         self._consume_entity(entity)
 
     # -- enemy contact -> battle --------------------------------------------
@@ -509,6 +513,14 @@ class OverworldScene(Scene):
         if music:
             self.game.audio.play_music(music)
 
+    # -- combat feedback (sfx + particles) ----------------------------------
+    def _on_entity_damaged(self, entity=None, **_kw) -> None:
+        self.game.audio.play_sound("hit.wav")
+        if self.game.particles is not None and entity is not None and entity.has("transform"):
+            t = entity.get("transform")
+            self.game.particles.emit_burst(t.x + 8, t.y + 8, count=8, speed=55,
+                                           life=0.35, color=(255, 210, 120))
+
     # -- quest toasts --------------------------------------------------------
     def _on_quest_started(self, quest="", **_kw) -> None:
         qdef = self.game.quest_db.get(quest)
@@ -531,11 +543,45 @@ class OverworldScene(Scene):
     # -- draw ----------------------------------------------------------------
     def draw(self, renderer) -> None:
         renderer.camera = self.camera
+        self._update_lighting()
         self.world.tilemap.draw(renderer, self.camera)
         self.render_system.draw(self.world, renderer)
         self._draw_hud(renderer)
         if self.transition is not None:
             self.transition.draw(renderer)
+
+    def _update_lighting(self) -> None:
+        """Feed the lighting effect this frame: per-map ambient + dynamic lights.
+
+        A map sets a dark ``ambient`` colour property to need lighting (e.g. the
+        cave); the player carries a torch and map 'light' objects add more. In a
+        bright map (no ambient) we add no lights, so lighting costs nothing."""
+        light = self.game.lighting
+        if light is None:
+            return
+        props = self.world.tilemap.properties
+        amb = props.get("ambient")
+        ambient = self._parse_color(amb) if amb else (255, 255, 255)
+        light.set_ambient(ambient)
+        light.clear_lights()
+        if ambient == (255, 255, 255):
+            return  # daylight: no dynamic lights needed
+        t = self.player.get("transform")
+        light.add_light(t.x + 8, t.y + 8,
+                        self.game.settings.get("render.torch_radius", 56),
+                        tuple(self.game.settings.get("render.torch_color", [255, 226, 170])))
+        for obj in self.world.tilemap.find_objects("light"):
+            color = self._parse_color(obj.properties.get("color", "#ffd28c"))
+            radius = obj.properties.get("radius", 40)
+            cx, cy = obj.center
+            light.add_light(cx, cy, radius, color or (255, 210, 140))
+
+    @staticmethod
+    def _parse_color(value):
+        from engine.map.tmx_loader import _parse_color
+        if isinstance(value, (list, tuple)):
+            return tuple(value[:3])
+        return _parse_color(value) or (255, 255, 255)
 
     def _draw_hud(self, renderer) -> None:
         s = self.style

@@ -21,6 +21,7 @@ from __future__ import annotations
 import os
 
 from engine.core.game import Game
+from engine.graphics.effects import LightingEffect, ParticleSystem
 from engine.inventory.item import ItemDatabase
 from engine.map.world_map import WorldMap
 from engine.quests.manager import QuestManager
@@ -63,6 +64,19 @@ def build_services(game: Game) -> None:
     game.quest_db = QuestDatabase()
     game.quest_db.load_dir(s.get("quests.quests_path", os.path.join(data_path, "quests")))
     game.quests = QuestManager(game, game.quest_db)  # reads/writes GameState.quests
+
+    # Optional render effects (config-gated). Built once and registered on the
+    # renderer; scenes drive lights / emit particles through these handles.
+    game.lighting = None
+    game.particles = None
+    if s.get("render.effects_enabled", False):
+        names = s.get("render.effects", [])
+        if "lighting" in names:
+            game.lighting = LightingEffect(after_layer_name=s.get("render.lighting_layer", "overhead"))
+            game.renderer.add_effect(game.lighting)
+        if "particles" in names:
+            game.particles = ParticleSystem(chunky=s.get("render.particle_size", 2))
+            game.renderer.add_effect(game.particles)
 
     game.world = None  # set by the overworld scene when active
 
