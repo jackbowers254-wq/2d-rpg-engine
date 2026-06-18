@@ -153,6 +153,8 @@ class BattleScene(Scene):
                     for tag in ent.tags:
                         if tag.startswith("spawnid:"):
                             g.state.consumed.add(tag[len("spawnid:"):])
+                    # Let quests/scripts react to the kill (turn-based path).
+                    g.events.publish("entity_died", entity=ent, source="battle")
                     g.world.remove_entity(eid)
             msgs = [f"Victory! +{res['xp']} XP"]
             if leveled:

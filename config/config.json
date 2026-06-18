@@ -75,6 +75,7 @@
       "cancel": ["escape", "backspace"],
       "menu": ["escape"],
       "inventory": ["i", "tab"],
+      "quest_log": ["l", "q"],
       "confirm": ["e", "return", "space"],
       "up": ["w", "up"],
       "down": ["s", "down"],
@@ -129,6 +130,10 @@
 
   "scripting": {
     "scripts_path": "data/scripts"
+  },
+
+  "quests": {
+    "quests_path": "data/quests"
   },
 
   "audio": {

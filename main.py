@@ -23,6 +23,8 @@ import os
 from engine.core.game import Game
 from engine.inventory.item import ItemDatabase
 from engine.map.world_map import WorldMap
+from engine.quests.manager import QuestManager
+from engine.quests.quest import QuestDatabase
 from engine.save.save_manager import SaveManager
 from engine.ui.style import UIStyle
 from game.factories.entity_factory import EntityFactory
@@ -32,6 +34,7 @@ from game.scenes.dialogue_scene import DialogueScene
 from game.scenes.inventory_scene import InventoryScene
 from game.scenes.overworld_scene import OverworldScene
 from game.scenes.pause_scene import PauseScene
+from game.scenes.quest_log_scene import QuestLogScene
 from game.scenes.title_scene import TitleScene
 
 
@@ -55,6 +58,11 @@ def build_services(game: Game) -> None:
 
     game.saves = SaveManager(s)
     register_all(game.saves)  # save-file migrations (old saves upgrade on load)
+
+    game.quest_db = QuestDatabase()
+    game.quest_db.load_dir(s.get("quests.quests_path", os.path.join(data_path, "quests")))
+    game.quests = QuestManager(game, game.quest_db)  # reads/writes GameState.quests
+
     game.world = None  # set by the overworld scene when active
 
 
@@ -65,6 +73,7 @@ def register_scenes(game: Game) -> None:
     game.scenes.register("battle", BattleScene)
     game.scenes.register("pause", PauseScene)
     game.scenes.register("inventory", InventoryScene)
+    game.scenes.register("quest_log", QuestLogScene)
 
 
 def main() -> None:

@@ -57,6 +57,12 @@ class OverworldScene(Scene):
         self._player_locked = False        # True during a cutscene
         self._inside_triggers = set()      # trigger names the player currently overlaps
 
+        # Quest toasts (subscriptions cleaned up in on_exit).
+        self._event_unsubs = [
+            g.events.subscribe("quest_started", self._on_quest_started),
+            g.events.subscribe("quest_completed", self._on_quest_completed),
+        ]
+
         # ECS world + systems (intent -> ai -> movement -> render).
         self.world = World(settings=g.settings, events=g.events)
         self.world.add_system(PlayerControllerSystem(g.input))
@@ -186,6 +192,9 @@ class OverworldScene(Scene):
         if inp.just_pressed("inventory"):
             g.scenes.push("inventory")
             return
+        if inp.just_pressed("quest_log"):
+            g.scenes.push("quest_log")
+            return
         if inp.just_pressed("quicksave"):
             self._sync_player_to_state()
             g.saves.save(1, g.state.to_data(), g.state.save_meta())
@@ -204,6 +213,9 @@ class OverworldScene(Scene):
         # Camera follows the player centre.
         t = self.player.get("transform")
         self.camera.update(t.x + 8, t.y + 8, dt)
+
+        if getattr(self.game, "quests", None):
+            self.game.quests.update(dt)  # poll flag/collect objectives
 
         self._update_interactions(inp)
         self._update_pickups()
@@ -482,6 +494,20 @@ class OverworldScene(Scene):
         # Called when an overlay (pause/dialogue/battle/inventory) is pushed on
         # top -> capture current position so a Save reflects where we are.
         self._sync_player_to_state()
+
+    # -- quest toasts --------------------------------------------------------
+    def _on_quest_started(self, quest="", **_kw) -> None:
+        qdef = self.game.quest_db.get(quest)
+        self._show_toast(f"New quest: {qdef.name if qdef else quest}", 2.5)
+
+    def _on_quest_completed(self, quest="", **_kw) -> None:
+        qdef = self.game.quest_db.get(quest)
+        self._show_toast(f"Quest complete: {qdef.name if qdef else quest}!", 3.0)
+
+    def on_exit(self) -> None:
+        for unsub in self._event_unsubs:
+            unsub()
+        self._event_unsubs = []
 
     # -- toast ---------------------------------------------------------------
     def _show_toast(self, text: str, duration: float = 2.0) -> None:

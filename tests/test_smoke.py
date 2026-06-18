@@ -123,7 +123,7 @@ def main():
     # --- map transition through a portal ---
     # (a short post-battle cooldown suppresses triggers for a few frames)
     portal = ow.world.tilemap.find_objects("portal")[0]
-    for _ in range(12):
+    for _ in range(24):  # margin for post-battle cooldown + transition duration
         teleport(ow, portal.x, portal.y)
         tick(game)
         if game.state.current_map == "cave":
