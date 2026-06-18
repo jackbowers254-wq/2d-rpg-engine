@@ -4,7 +4,7 @@
   "name": "Clear the Cave",
   "description": "The villager asked you to thin out the slimes and explore the hollow to the north.",
   "objectives": [
-    { "id": "slimes", "type": "defeat", "target": "enemy_slime", "count": 2, "description": "Defeat slimes" },
+    { "id": "slimes", "type": "defeat", "target": "enemy", "count": 2, "description": "Defeat monsters" },
     { "id": "explore", "type": "flag", "flag": "visited_cave", "description": "Explore the cave" }
   ],
   "rewards": { "xp": 15, "currency": 25, "items": [{ "id": "ether", "qty": 1 }] }

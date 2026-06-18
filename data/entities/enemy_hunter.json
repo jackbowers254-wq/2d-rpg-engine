@@ -1,0 +1,16 @@
+{
+  "_comment": "A faster, aggressive slime that hunts the player with A* pathfinding (detection + aggro). Reuses the slime art; Phase C will palette-swap it for a distinct look.",
+  "name": "Hunter Slime",
+  "type": "enemy_hunter",
+  "tags": ["enemy"],
+  "components": {
+    "transform": { "facing": "down" },
+    "sprite": { "color": [210, 110, 110], "size": [16, 16], "offset": [0, 0], "layer": "entities" },
+    "animation": { "source": "slime.json", "directional": false, "auto_state": true },
+    "movement": { "style": "smooth", "speed": 46 },
+    "collider": { "w": 12, "h": 8, "offset_x": 2, "offset_y": 5, "solid": false, "trigger": true, "trigger_event": "enemy_touch" },
+    "health": { "hp": 12, "max_hp": 12 },
+    "stats": { "attack": 5, "defense": 1, "xp_reward": 12 },
+    "ai": { "behavior": "hunter", "params": { "aggro_range": 7, "give_up": 3.0, "require_los": true, "run": false, "wander_when_idle": true } }
+  }
+}

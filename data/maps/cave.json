@@ -593,7 +593,7 @@
       {
        "name": "entity",
        "type": "string",
-       "value": "enemy_slime"
+       "value": "enemy_hunter"
       }
      ]
     },
