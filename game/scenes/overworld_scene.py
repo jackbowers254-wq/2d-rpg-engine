@@ -54,6 +54,16 @@ class OverworldScene(Scene):
         self.render_system = RenderSystem(g.assets, g.settings)
         g.world = self.world  # expose for overlays (inventory/battle)
 
+        # Combat style is a config switch: "encounter" (turn-based battle scene)
+        # or "action" (real-time melee handled by a system in this scene).
+        self.combat_style = g.settings.get("combat.style", "encounter")
+        if self.combat_style == "action":
+            from engine.combat.action_combat import ActionCombatSystem
+            self.world.add_system(ActionCombatSystem(
+                g.input, g.events, g.settings,
+                on_enemy_defeated=self._on_enemy_defeated,
+                on_player_death=self._on_player_death))
+
         ts = g.settings.get("world.tile_size", 16)
         self.tile_size = ts
         view_w, view_h = g.renderer.base_size
@@ -157,7 +167,8 @@ class OverworldScene(Scene):
 
         self._update_interactions(inp)
         self._update_pickups()
-        self._update_enemy_touch()
+        if self.combat_style == "encounter":
+            self._update_enemy_touch()  # action style handles combat in its system
         self._update_portals()
 
     # -- interactions --------------------------------------------------------
@@ -240,6 +251,30 @@ class OverworldScene(Scene):
         self._sync_player_to_state()
         self._portal_cooldown = 0.6  # avoid instant re-trigger on return
         self.game.scenes.push("battle", enemy_ids=enemy_ids)
+
+    # -- action-combat callbacks (used when combat.style == "action") --------
+    def _on_enemy_defeated(self, entity) -> None:
+        stats = entity.get("stats")
+        xp = stats.xp_reward if stats else 0
+        leveled = self.game.state.grant_xp(xp)
+        if leveled:
+            self._apply_state_to_player()  # level-up heals + boosts the live entity
+        self._consume_entity(entity)
+        self._show_toast(f"Defeated {entity.name}! +{xp} XP")
+
+    def _on_player_death(self) -> None:
+        self.game.state.player["hp"] = 0
+        self.game.scenes.switch_to("title")
+
+    def _apply_state_to_player(self) -> None:
+        st = self.game.state.player
+        if self.player.has("health"):
+            hp = self.player.get("health")
+            hp.max_hp = st["max_hp"]
+            hp.hp = st["hp"]
+        if self.player.has("stats"):
+            s = self.player.get("stats")
+            s.attack, s.defense = st["attack"], st["defense"]
 
     # -- portals / map transitions ------------------------------------------
     def _update_portals(self) -> None:

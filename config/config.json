@@ -63,6 +63,7 @@
       "move_right": ["d", "right"],
       "run": ["left shift", "right shift"],
       "interact": ["e", "return", "space"],
+      "attack": ["j", "x", "k"],
       "cancel": ["escape", "backspace"],
       "menu": ["escape"],
       "inventory": ["i", "tab"],
@@ -95,12 +96,17 @@
   },
 
   "combat": {
+    "style": "encounter",
     "system": "turn_based",
     "player_hp": 24,
     "player_attack": 6,
     "player_defense": 2,
     "flee_chance": 0.5,
-    "xp_per_level": 20
+    "xp_per_level": 20,
+    "attack_cooldown": 0.35,
+    "attack_range": 14,
+    "enemy_attack_cooldown": 1.0,
+    "player_invuln": 0.8
   },
 
   "inventory": {

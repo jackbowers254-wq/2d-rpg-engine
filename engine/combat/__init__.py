@@ -17,6 +17,7 @@ from engine.combat.combat_system import (
     create_combat,
 )
 from engine.combat.turn_based import TurnBasedCombat
+from engine.combat.action_combat import ActionCombatSystem
 
 __all__ = [
     "Combatant",
@@ -25,4 +26,5 @@ __all__ = [
     "combat_system",
     "create_combat",
     "TurnBasedCombat",
+    "ActionCombatSystem",
 ]
