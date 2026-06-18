@@ -1,0 +1,150 @@
+{
+  "_comment": "CENTRAL ENGINE CONFIG. Every tunable value in the engine is read from here through engine/settings.py. There are NO magic numbers buried in code. Edit this file (or pass a different one to Game) to retune the whole engine. Every option is documented in README.md under 'Configuration Reference'. Values here are the engine DEFAULTS; engine/settings.py deep-merges a user config on top, so you only need to override the keys you care about.",
+
+  "game": {
+    "title": "2D RPG Engine - Demo",
+    "version": "0.1.0",
+    "start_scene": "title",
+    "data_path": "data"
+  },
+
+  "display": {
+    "base_resolution": [320, 180],
+    "window_size": [1280, 720],
+    "fullscreen": false,
+    "resizable": true,
+    "vsync": true,
+    "maintain_aspect_ratio": true,
+    "integer_scaling": false,
+    "smooth_scaling": false,
+    "letterbox_color": [8, 8, 12],
+    "clear_color": [24, 20, 37],
+    "max_fps": 60,
+    "show_fps": true
+  },
+
+  "world": {
+    "tile_size": 16,
+    "sprite_scale": 1.0,
+    "default_map": "overworld",
+    "maps_path": "data/maps"
+  },
+
+  "render": {
+    "layers": ["background", "ground", "decor", "objects", "entities", "overhead", "weather", "ui", "overlay"],
+    "default_entity_layer": "entities",
+    "y_sort_layers": ["entities"],
+    "effects_enabled": false,
+    "effects": ["lighting", "particles"]
+  },
+
+  "player": {
+    "movement_style": "smooth",
+    "move_speed": 70,
+    "run_multiplier": 1.7,
+    "grid_move_time": 0.14
+  },
+
+  "camera": {
+    "follow": true,
+    "smoothing": 0.18,
+    "clamp_to_map": true,
+    "deadzone": [0, 0]
+  },
+
+  "input": {
+    "bindings": {
+      "move_up": ["w", "up"],
+      "move_down": ["s", "down"],
+      "move_left": ["a", "left"],
+      "move_right": ["d", "right"],
+      "run": ["left shift", "right shift"],
+      "interact": ["e", "return", "space"],
+      "cancel": ["escape", "backspace"],
+      "menu": ["escape"],
+      "inventory": ["i", "tab"],
+      "confirm": ["e", "return", "space"],
+      "up": ["w", "up"],
+      "down": ["s", "down"],
+      "left": ["a", "left"],
+      "right": ["d", "right"],
+      "quicksave": ["f5"],
+      "quickload": ["f9"],
+      "debug_toggle": ["f1"]
+    }
+  },
+
+  "ui": {
+    "font_path": null,
+    "font_size": 8,
+    "title_font_size": 16,
+    "text_color": [235, 235, 245],
+    "disabled_color": [120, 120, 140],
+    "highlight_color": [250, 220, 90],
+    "box_color": [20, 18, 40],
+    "box_border_color": [120, 130, 200],
+    "box_border_width": 1,
+    "box_padding": 6,
+    "text_speed": 36,
+    "cursor": ">",
+    "healthbar_bg": [60, 20, 30],
+    "healthbar_fg": [210, 60, 70]
+  },
+
+  "combat": {
+    "system": "turn_based",
+    "player_hp": 24,
+    "player_attack": 6,
+    "player_defense": 2,
+    "flee_chance": 0.5,
+    "xp_per_level": 20
+  },
+
+  "inventory": {
+    "max_slots": 20,
+    "items_path": "data/items",
+    "starting_items": []
+  },
+
+  "dialogue": {
+    "dialogue_path": "data/dialogue"
+  },
+
+  "audio": {
+    "enabled": true,
+    "master_volume": 0.8,
+    "music_volume": 0.6,
+    "sfx_volume": 0.8,
+    "frequency": 44100,
+    "buffer": 512
+  },
+
+  "assets": {
+    "root": "assets",
+    "sprites": "assets/sprites",
+    "audio": "assets/audio",
+    "fonts": "assets/fonts",
+    "scale_set": "1x",
+    "missing_texture_color": [255, 0, 220]
+  },
+
+  "save": {
+    "directory": "saves",
+    "slots": 3,
+    "autosave": false,
+    "version": 1
+  },
+
+  "map_streaming": {
+    "enabled": false,
+    "chunk_size": [32, 32],
+    "load_radius": 1
+  },
+
+  "debug": {
+    "show_colliders": false,
+    "show_grid": false,
+    "show_portals": false,
+    "log_level": "info"
+  }
+}
