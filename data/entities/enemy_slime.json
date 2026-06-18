@@ -5,7 +5,8 @@
   "tags": ["enemy"],
   "components": {
     "transform": { "facing": "down" },
-    "sprite": { "color": [120, 200, 130], "size": [12, 9], "offset": [2, 5], "layer": "entities" },
+    "sprite": { "color": [120, 200, 130], "size": [16, 16], "offset": [0, 0], "layer": "entities" },
+    "animation": { "source": "slime.json", "directional": false, "auto_state": true },
     "movement": { "style": "smooth", "speed": 32 },
     "collider": { "w": 12, "h": 8, "offset_x": 2, "offset_y": 5, "solid": false, "trigger": true, "trigger_event": "enemy_touch" },
     "health": { "hp": 10, "max_hp": 10 },

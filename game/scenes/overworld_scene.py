@@ -25,6 +25,7 @@ from typing import List, Optional
 
 from engine.core.scene import Scene
 from engine.ecs.systems.ai_system import AISystem
+from engine.ecs.systems.animation_system import AnimationSystem
 from engine.ecs.systems.movement_system import MovementSystem
 from engine.ecs.systems.player_controller import PlayerControllerSystem
 from engine.ecs.systems.render_system import RenderSystem
@@ -49,6 +50,7 @@ class OverworldScene(Scene):
         self.world.add_system(PlayerControllerSystem(g.input))
         self.world.add_system(AISystem())
         self.world.add_system(MovementSystem())
+        self.world.add_system(AnimationSystem(g.assets))
         self.render_system = RenderSystem(g.assets, g.settings)
         g.world = self.world  # expose for overlays (inventory/battle)
 
@@ -147,8 +149,7 @@ class OverworldScene(Scene):
 
         # Advance simulation (movement, collision, AI). Removal flush happens here,
         # so a just-defeated enemy can't re-trigger below.
-        self.world.update(dt)
-        self.render_system.update_animations(self.world, dt)
+        self.world.update(dt)  # includes the AnimationSystem
 
         # Camera follows the player centre.
         t = self.player.get("transform")

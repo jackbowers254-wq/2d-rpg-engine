@@ -45,6 +45,7 @@ class AssetManager:
         self._sounds: Dict[str, Optional[pygame.mixer.Sound]] = {}
         self._json: Dict[str, dict] = {}
         self._generated: Dict[Tuple, pygame.Surface] = {}
+        self._anim_sets: Dict[str, object] = {}
 
     # -- path resolution -----------------------------------------------------
     def _resolve_sprite(self, rel_path: str) -> Optional[str]:
@@ -93,6 +94,37 @@ class AssetManager:
         """A placeholder sprite exactly one tile in size (in base-res pixels)."""
         ts = self.settings.get("world.tile_size", 16)
         return self.placeholder(ts, ts, color)
+
+    # -- animation sets ------------------------------------------------------
+    def get_animation_set(self, source: str):
+        """Load (and cache) an AnimationSet.
+
+        ``source`` ending in ``.json`` is treated as an Aseprite export and
+        resolved against the sprites root. Returns an
+        :class:`~engine.graphics.animation.AnimationSet`.
+        """
+        if source in self._anim_sets:
+            return self._anim_sets[source]
+        from engine.assets.aseprite import load_aseprite  # lazy: avoid import cycle
+
+        path = self._resolve_sprite(source) or os.path.join(self.sprites_root, source)
+        anim_set = load_aseprite(path, self)
+        self._anim_sets[source] = anim_set
+        return anim_set
+
+    def make_grid_animation_set(self, image: str, frame_w: int, frame_h: int,
+                                clips: dict, fps: float = 8.0, non_looping=None):
+        """Build an AnimationSet from a plain grid sheet + {clip:[indices]}."""
+        from engine.graphics.animation import build_grid_set
+        from engine.graphics.spritesheet import SpriteSheet
+
+        key = f"grid:{image}:{frame_w}x{frame_h}"
+        if key in self._anim_sets:
+            return self._anim_sets[key]
+        sheet = SpriteSheet.from_grid(self.get_image(image), frame_w, frame_h)
+        anim_set = build_grid_set(sheet, clips, fps, non_looping=non_looping)
+        self._anim_sets[key] = anim_set
+        return anim_set
 
     # -- fonts ---------------------------------------------------------------
     def get_font(self, size: int, path: Optional[str] = None) -> pygame.font.Font:

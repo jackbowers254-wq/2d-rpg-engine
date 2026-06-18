@@ -5,7 +5,8 @@
   "tags": ["player"],
   "components": {
     "transform": { "facing": "down" },
-    "sprite": { "color": [90, 150, 250], "size": [12, 14], "offset": [2, 1], "layer": "entities" },
+    "sprite": { "color": [90, 150, 250], "size": [16, 16], "offset": [0, 0], "layer": "entities" },
+    "animation": { "source": "hero.json", "directional": true, "auto_state": true },
     "movement": { "style": "smooth", "speed": 70, "run_multiplier": 1.7, "move_time": 0.14 },
     "collider": { "w": 10, "h": 7, "offset_x": 3, "offset_y": 8, "solid": true },
     "health": { "hp": 24, "max_hp": 24 },

@@ -33,6 +33,9 @@ class MovementComponent(Component):
     input_dy: int = 0
     running: bool = False
 
+    # --- runtime flags ---
+    moving: bool = False         # set by MovementSystem if the entity moved this frame
+
     # --- runtime grid-tween state (managed by MovementSystem) ---
     is_moving: bool = False
     _t: float = 0.0              # tween progress in seconds

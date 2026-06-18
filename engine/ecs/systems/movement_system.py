@@ -52,12 +52,15 @@ class MovementSystem(System):
     def _update_smooth(self, e, t, m, col, tilemap, solids, dt) -> None:
         vx, vy = m.vx, m.vy
         mag = math.hypot(vx, vy)
+        m.moving = False
         if mag > 0:
             vx, vy = vx / mag, vy / mag  # normalise intent so diagonals aren't faster
             t.face(Direction.from_vector(vx, vy, t.direction))
             speed = m.speed * (m.run_multiplier if m.running else 1.0)
             dx, dy = vx * speed * dt, vy * speed * dt
+            before = (t.x, t.y)
             self._move_resolved(e, t, col, dx, dy, tilemap, solids)
+            m.moving = (t.x, t.y) != before  # False if fully blocked by a wall
         # Intent is consumed each frame; controllers re-set it next frame.
         m.vx = m.vy = 0.0
         m.running = False
@@ -78,6 +81,7 @@ class MovementSystem(System):
 
     # -- grid ----------------------------------------------------------------
     def _update_grid(self, world, e, t, m, col, tilemap, solids, dt) -> None:
+        m.moving = m.is_moving
         if m.is_moving:
             move_time = m.move_time / (m.run_multiplier if m.running else 1.0)
             m._t += dt
