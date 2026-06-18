@@ -32,6 +32,7 @@ from game.migrations import register_all
 from game.scenes.battle_scene import BattleScene
 from game.scenes.dialogue_scene import DialogueScene
 from game.scenes.inventory_scene import InventoryScene
+from game.scenes.options_scene import OptionsScene
 from game.scenes.overworld_scene import OverworldScene
 from game.scenes.pause_scene import PauseScene
 from game.scenes.quest_log_scene import QuestLogScene
@@ -74,6 +75,7 @@ def register_scenes(game: Game) -> None:
     game.scenes.register("pause", PauseScene)
     game.scenes.register("inventory", InventoryScene)
     game.scenes.register("quest_log", QuestLogScene)
+    game.scenes.register("options", OptionsScene)
 
 
 def main() -> None:

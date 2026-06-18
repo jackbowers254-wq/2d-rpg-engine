@@ -57,10 +57,11 @@ class OverworldScene(Scene):
         self._player_locked = False        # True during a cutscene
         self._inside_triggers = set()      # trigger names the player currently overlaps
 
-        # Quest toasts (subscriptions cleaned up in on_exit).
+        # Quest toasts + hit SFX (subscriptions cleaned up in on_exit).
         self._event_unsubs = [
             g.events.subscribe("quest_started", self._on_quest_started),
             g.events.subscribe("quest_completed", self._on_quest_completed),
+            g.events.subscribe("entity_damaged", lambda **k: g.audio.play_sound("hit.wav")),
         ]
 
         # ECS world + systems (intent -> ai -> movement -> render).
@@ -120,6 +121,11 @@ class OverworldScene(Scene):
         # must step off any portal tile first.
         self._portal_locked = True
         self._inside_triggers = set()
+
+        # Background music for this map (data-driven), crossfading from the last.
+        music = tmap.properties.get("music")
+        if music:
+            g.audio.play_music(music)
 
         # Fire any 'load' triggers for this map (e.g. an intro on first entry).
         for trg in tmap.find_objects("trigger"):
@@ -291,6 +297,7 @@ class OverworldScene(Scene):
             return
         item = self.game.item_db.get(pick.item_id)
         self._show_toast(f"Got {item.name if item else pick.item_id}!")
+        self.game.audio.play_sound("pickup.wav")
         self._consume_entity(entity)
 
     # -- enemy contact -> battle --------------------------------------------
@@ -494,6 +501,13 @@ class OverworldScene(Scene):
         # Called when an overlay (pause/dialogue/battle/inventory) is pushed on
         # top -> capture current position so a Save reflects where we are.
         self._sync_player_to_state()
+
+    def on_resume(self) -> None:
+        # Returning from a scene that changed the music (e.g. battle) -> restore
+        # this map's track (a no-op crossfade if it never changed).
+        music = self.world.tilemap.properties.get("music") if self.world.tilemap else None
+        if music:
+            self.game.audio.play_music(music)
 
     # -- quest toasts --------------------------------------------------------
     def _on_quest_started(self, quest="", **_kw) -> None:

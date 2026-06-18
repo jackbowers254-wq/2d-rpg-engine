@@ -1190,6 +1190,11 @@
    "name": "display_name",
    "type": "string",
    "value": "Greenfields"
+  },
+  {
+   "name": "music",
+   "type": "string",
+   "value": "overworld.wav"
   }
  ]
 }

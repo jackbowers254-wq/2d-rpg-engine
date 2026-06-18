@@ -141,6 +141,7 @@
     "master_volume": 0.8,
     "music_volume": 0.6,
     "sfx_volume": 0.8,
+    "crossfade_ms": 700,
     "frequency": 44100,
     "buffer": 512
   },

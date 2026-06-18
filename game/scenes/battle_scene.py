@@ -60,6 +60,7 @@ class BattleScene(Scene):
         ], self.style)
         self.item_menu = None
         self._log_line = self.combat.log[-1] if self.combat.log else ""
+        g.audio.play_music("battle.wav")  # crossfade into battle music
 
     # -- update --------------------------------------------------------------
     def update(self, dt: float) -> None:
@@ -87,6 +88,7 @@ class BattleScene(Scene):
         if inp.just_pressed("confirm") or inp.just_pressed("interact"):
             choice = self.command_menu.selected.value
             if choice == "attack":
+                self.game.audio.play_sound("hit.wav")
                 self._enqueue(self.combat.player_attack())
             elif choice == "flee":
                 self._enqueue(self.combat.player_flee())

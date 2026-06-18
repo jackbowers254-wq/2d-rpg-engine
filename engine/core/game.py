@@ -31,6 +31,7 @@ from typing import Any, Optional
 import pygame
 
 from engine.assets.asset_manager import AssetManager
+from engine.audio.audio_manager import AudioManager
 from engine.core.debug import DebugOverlay
 from engine.core.events import EventBus
 from engine.core.scene_manager import SceneManager
@@ -60,6 +61,7 @@ class Game:
         self.renderer = PygameRenderer(self.settings)
         self.input = InputManager(self.settings, self.renderer)
         self.assets = AssetManager(self.settings)
+        self.audio = AudioManager(self.settings, self.assets)
         self.scenes = SceneManager(self)
 
         # Generic slot for the game's shared state (party, inventory, flags...).
@@ -103,6 +105,7 @@ class Game:
             if not self.running:
                 break
             self.debug.update()
+            self.audio.update(dt)
             self.scenes.update(dt)
             if self.scenes.is_empty:  # last scene popped itself -> exit
                 self.running = False

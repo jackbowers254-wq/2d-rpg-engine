@@ -610,6 +610,11 @@
    "name": "display_name",
    "type": "string",
    "value": "Hollow Cave"
+  },
+  {
+   "name": "music",
+   "type": "string",
+   "value": "cave.wav"
   }
  ]
 }

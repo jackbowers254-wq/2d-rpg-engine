@@ -28,6 +28,7 @@ class PauseScene(Scene):
             MenuItem("Resume", "resume"),
             MenuItem("Items", "items"),
             MenuItem("Quests", "quests"),
+            MenuItem("Options", "options"),
             MenuItem("Save", "save"),
             MenuItem("Load", "load", enabled=has_save),
             MenuItem("Quit to Title", "title"),
@@ -57,6 +58,8 @@ class PauseScene(Scene):
             g.scenes.push("inventory")
         elif choice == "quests":
             g.scenes.push("quest_log")
+        elif choice == "options":
+            g.scenes.push("options")
         elif choice == "save":
             g.saves.save(1, g.state.to_data(), g.state.save_meta())
             self._toast = "Game saved."
