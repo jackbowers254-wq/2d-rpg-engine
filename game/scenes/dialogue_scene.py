@@ -11,7 +11,11 @@ from __future__ import annotations
 import os
 
 from engine.core.scene import Scene
-from engine.dialogue.dialogue_system import DialogueContext, DialogueSystem
+from engine.dialogue.dialogue_system import (
+    DialogueContext,
+    DialogueSystem,
+    validate_dialogue,
+)
 from engine.ui.dialogue_box import DialogueBox
 
 
@@ -25,6 +29,7 @@ class DialogueScene(Scene):
                             f"{dialogue}.json")
         data = g.assets.load_json(path, cache=False)
         data = {k: v for k, v in data.items() if not k.startswith("_")}
+        validate_dialogue(data, path)  # clear error on a typo / dangling link
 
         context = DialogueContext(flags=g.state.flags,
                                   inventory=g.state.inventory,

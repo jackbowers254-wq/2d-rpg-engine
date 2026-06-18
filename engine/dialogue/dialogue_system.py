@@ -40,9 +40,42 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from engine.data.schemas import DIALOGUE_SCHEMA
+from engine.data.validation import DataError, validate
 from engine.utils.logger import get_logger
 
 log = get_logger("dialogue")
+
+
+def validate_dialogue(data: dict, source: str) -> None:
+    """Validate a dialogue file's shape AND its node references.
+
+    Beyond the schema, this checks that ``start`` and every ``next`` (node and
+    choice) point at a node that actually exists -- the most common dialogue bug.
+    Raises :class:`DataError` listing every problem with its location.
+    """
+    errors = validate(data, DIALOGUE_SCHEMA)
+    nodes = data.get("nodes", {}) if isinstance(data.get("nodes"), dict) else {}
+
+    start = data.get("start")
+    if start is not None and start not in nodes:
+        errors.append(f"start: points at missing node '{start}'")
+
+    for node_id, node in nodes.items():
+        if not isinstance(node, dict):
+            continue
+        nxt = node.get("next")
+        if nxt is not None and nxt not in nodes:
+            errors.append(f"nodes.{node_id}.next: points at missing node '{nxt}'")
+        for i, choice in enumerate(node.get("choices", []) or []):
+            cnext = choice.get("next") if isinstance(choice, dict) else None
+            if cnext is not None and cnext not in nodes:
+                errors.append(
+                    f"nodes.{node_id}.choices[{i}].next: missing node '{cnext}'")
+
+    if errors:
+        bullet = "\n  - ".join(errors)
+        raise DataError(f"Invalid dialogue in {source}:\n  - {bullet}")
 
 
 @dataclass

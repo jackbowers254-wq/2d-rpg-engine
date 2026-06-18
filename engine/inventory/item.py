@@ -25,6 +25,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+from engine.data.schemas import ITEM_SCHEMA
+from engine.data.validation import validate_or_raise
 from engine.utils.logger import get_logger
 
 log = get_logger("items")
@@ -76,6 +78,8 @@ class ItemDatabase:
             for key, entry in pairs:
                 entry = dict(entry)
                 entry.setdefault("id", key)
+                # Validate before constructing so a typo points at file + field.
+                validate_or_raise(entry, ITEM_SCHEMA, f"{path} [item '{key}']")
                 self._items[entry["id"]] = ItemDef(**entry)
         log.info("Loaded %d item definitions", len(self._items))
 

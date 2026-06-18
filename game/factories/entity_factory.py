@@ -17,10 +17,13 @@ Two extra conveniences:
 from __future__ import annotations
 
 import copy
+import dataclasses
 import os
 from typing import Dict, Optional
 
-from engine.ecs.component import COMPONENT_REGISTRY
+from engine.data.schemas import ENTITY_SCHEMA
+from engine.data.validation import DataError, closest, validate_or_raise
+from engine.ecs.component import COMPONENT_REGISTRY, Component
 from engine.ecs.entity import Entity
 from engine.settings import deep_merge
 from engine.utils.logger import get_logger
@@ -52,8 +55,32 @@ class EntityFactory:
             path = os.path.join(self.entities_dir, f"{name}.json")
             data = self.assets.load_json(path)
             data = {k: v for k, v in data.items() if not k.startswith("_")}
+            # Fail fast with a clear message on a malformed archetype file.
+            validate_or_raise(data, ENTITY_SCHEMA, f"{name}.json")
             self._archetypes[name] = data
         return self._archetypes[name]
+
+    def _build_component(self, comp_name: str, comp_data: dict, source: str) -> Component:
+        """Instantiate one component, validating its name and fields clearly."""
+        cls = COMPONENT_REGISTRY.get(comp_name)
+        if cls is None:
+            raise DataError(
+                f"{source}: unknown component '{comp_name}'"
+                f"{closest(comp_name, COMPONENT_REGISTRY)}. "
+                f"Known: {sorted(COMPONENT_REGISTRY)}")
+        comp_data = comp_data or {}
+        # If the component uses the default dict->kwargs constructor, check its
+        # fields up front so a typo names the offending key (and a suggestion).
+        if getattr(cls.from_data, "__func__", None) is Component.from_data.__func__ \
+                and dataclasses.is_dataclass(cls):
+            valid = {f.name for f in dataclasses.fields(cls)}
+            bad = [k for k in comp_data if k not in valid and not str(k).startswith("_")]
+            if bad:
+                issues = ", ".join(f"'{k}'{closest(k, valid)}" for k in bad)
+                raise DataError(
+                    f"{source} [component '{comp_name}']: unknown field(s) {issues}. "
+                    f"Valid: {sorted(valid)}")
+        return cls.from_data(comp_data)
 
     # -- creation ------------------------------------------------------------
     def create(self, name: str, x: Optional[float] = None, y: Optional[float] = None,
@@ -68,11 +95,7 @@ class EntityFactory:
             entity.add_tag(tag)
 
         for comp_name, comp_data in data.get("components", {}).items():
-            cls = COMPONENT_REGISTRY.get(comp_name)
-            if cls is None:
-                log.warning("Archetype '%s' uses unknown component '%s'", name, comp_name)
-                continue
-            entity.add(cls.from_data(comp_data or {}))
+            entity.add(self._build_component(comp_name, comp_data, f"{name}.json"))
 
         if x is not None or y is not None:
             t = entity.get("transform")
