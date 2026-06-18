@@ -14,6 +14,8 @@
     "fullscreen": false,
     "resizable": true,
     "vsync": true,
+    "pixel_perfect": true,
+    "scaling_mode": "integer",
     "maintain_aspect_ratio": true,
     "integer_scaling": false,
     "smooth_scaling": false,
@@ -49,7 +51,8 @@
     "follow": true,
     "smoothing": 0.18,
     "clamp_to_map": true,
-    "deadzone": [0, 0]
+    "deadzone": [0, 0],
+    "pixel_snap": true
   },
 
   "input": {

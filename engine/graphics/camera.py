@@ -40,6 +40,10 @@ class Camera:
         self.clamp = settings.get("camera.clamp_to_map", True)
         dz = settings.get("camera.deadzone", [0, 0])
         self.deadzone = (dz[0], dz[1])
+        # Pixel-snap renders the camera at whole-pixel offsets so scrolling pixel
+        # art doesn't shimmer/jitter. The internal x/y stay float (so smoothing
+        # accumulates correctly); only the *render offset* is rounded.
+        self.pixel_snap = settings.get("camera.pixel_snap", True)
 
     # -- configuration -------------------------------------------------------
     def set_bounds(self, x: int, y: int, w: int, h: int) -> None:
@@ -51,7 +55,14 @@ class Camera:
 
     @property
     def offset(self) -> Tuple[float, float]:
-        """The value the renderer subtracts from world positions."""
+        """The value the renderer subtracts from world positions.
+
+        When ``pixel_snap`` is on this is rounded to whole pixels so the world
+        grid stays aligned to the screen grid (no shimmer). World/UI logic still
+        uses the float position via ``center`` etc.
+        """
+        if self.pixel_snap:
+            return (round(self.x), round(self.y))
         return (self.x, self.y)
 
     @property

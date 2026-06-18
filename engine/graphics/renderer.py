@@ -128,9 +128,18 @@ class PygameRenderer(Renderer):
         self._base_w, self._base_h = d.get("display.base_resolution", [320, 180])
         self._clear_color: Color = tuple(d.get("display.clear_color", [0, 0, 0]))
         self._letterbox_color: Color = tuple(d.get("display.letterbox_color", [0, 0, 0]))
-        self._maintain_aspect: bool = d.get("display.maintain_aspect_ratio", True)
-        self._integer_scaling: bool = d.get("display.integer_scaling", False)
-        self._smooth: bool = d.get("display.smooth_scaling", False)
+
+        # Scaling mode resolves from the modern key, falling back to the Gen 1
+        # boolean keys so existing configs keep working unchanged:
+        #   "integer" -> nearest-neighbour, whole-number scale (pixel perfect)
+        #   "fit"     -> nearest-neighbour, fractional scale, keep aspect (letterbox)
+        #   "stretch" -> fill the window, ignore aspect ratio
+        self._pixel_perfect: bool = d.get("display.pixel_perfect", False)
+        self._scaling_mode: str = self._resolve_scaling_mode(d)
+        self._maintain_aspect: bool = self._scaling_mode != "stretch"
+        self._integer_scaling: bool = self._scaling_mode == "integer"
+        # Smooth (linear) scaling is incompatible with pixel-perfect output.
+        self._smooth: bool = d.get("display.smooth_scaling", False) and not self._pixel_perfect
 
         # Window flags from config.
         flags = 0
@@ -163,6 +172,18 @@ class PygameRenderer(Renderer):
         # Cached scaling geometry (recomputed on resize).
         self._dest_rect = pygame.Rect(0, 0, *win_size)
         self._recompute_scale(win_size)
+
+    @staticmethod
+    def _resolve_scaling_mode(d) -> str:
+        """Pick a scaling mode, honouring the modern key then the Gen 1 booleans."""
+        mode = d.get("display.scaling_mode")
+        if mode in ("integer", "fit", "stretch"):
+            return mode
+        if d.get("display.pixel_perfect", False):
+            return "integer"
+        if not d.get("display.maintain_aspect_ratio", True):
+            return "stretch"
+        return "integer" if d.get("display.integer_scaling", False) else "fit"
 
     # -- window / scaling ----------------------------------------------------
     def handle_resize(self, size: Sequence[int]) -> None:
