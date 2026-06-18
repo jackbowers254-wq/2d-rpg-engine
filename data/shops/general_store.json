@@ -1,0 +1,13 @@
+{
+  "_comment": "Demo shop. Prices default to each item's value * buy_markup; sells back at sell_ratio.",
+  "id": "general_store",
+  "name": "Greenfields Goods",
+  "greeting": "Welcome! Buy something, will ya?",
+  "buy_markup": 1.0,
+  "sell_ratio": 0.5,
+  "stock": [
+    { "item": "potion" },
+    { "item": "ether" },
+    { "item": "wood_sword", "stock": 1 }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "_comment": "A shopkeeper. interactable.action 'shop' opens the shop named in params.shop.",
+  "name": "Merchant",
+  "type": "npc_merchant",
+  "tags": ["npc"],
+  "components": {
+    "transform": { "facing": "down" },
+    "sprite": { "color": [200, 150, 220], "size": [12, 14], "offset": [2, 1], "layer": "entities" },
+    "collider": { "w": 12, "h": 9, "offset_x": 2, "offset_y": 6, "solid": true },
+    "interactable": { "action": "shop", "prompt": "Shop", "params": { "shop": "general_store" }, "radius": 20 },
+    "ai": { "behavior": "idle" }
+  }
+}

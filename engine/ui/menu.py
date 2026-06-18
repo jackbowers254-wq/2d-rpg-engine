@@ -11,12 +11,17 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional
 
+# Sentinel so an explicit value=None is distinct from "value omitted" (which
+# defaults the value to the label). Prevents disabled placeholders like
+# MenuItem("(empty)", None) from getting the label "(empty)" as their value.
+_UNSET = object()
+
 
 class MenuItem:
-    def __init__(self, label: str, value=None, enabled: bool = True,
+    def __init__(self, label: str, value=_UNSET, enabled: bool = True,
                  action: Optional[Callable] = None) -> None:
         self.label = label
-        self.value = value if value is not None else label
+        self.value = label if value is _UNSET else value
         self.enabled = enabled
         self.action = action
 

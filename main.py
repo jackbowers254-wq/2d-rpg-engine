@@ -22,6 +22,7 @@ import os
 
 from engine.abilities.ability import AbilityDatabase, StatusDatabase
 from engine.core.game import Game
+from engine.economy.shop import ShopDatabase
 from engine.graphics.effects import LightingEffect, ParticleSystem
 from engine.inventory.item import ItemDatabase
 from engine.map.world_map import WorldMap
@@ -38,6 +39,7 @@ from game.scenes.options_scene import OptionsScene
 from game.scenes.overworld_scene import OverworldScene
 from game.scenes.pause_scene import PauseScene
 from game.scenes.quest_log_scene import QuestLogScene
+from game.scenes.shop_scene import ShopScene
 from game.scenes.title_scene import TitleScene
 
 
@@ -71,6 +73,9 @@ def build_services(game: Game) -> None:
     game.quest_db.load_dir(s.get("quests.quests_path", os.path.join(data_path, "quests")))
     game.quests = QuestManager(game, game.quest_db)  # reads/writes GameState.quests
 
+    game.shops = ShopDatabase()
+    game.shops.load_dir(s.get("economy.shops_path", os.path.join(data_path, "shops")))
+
     # Optional render effects (config-gated). Built once and registered on the
     # renderer; scenes drive lights / emit particles through these handles.
     game.lighting = None
@@ -96,6 +101,7 @@ def register_scenes(game: Game) -> None:
     game.scenes.register("inventory", InventoryScene)
     game.scenes.register("quest_log", QuestLogScene)
     game.scenes.register("options", OptionsScene)
+    game.scenes.register("shop", ShopScene)
 
 
 def main() -> None:

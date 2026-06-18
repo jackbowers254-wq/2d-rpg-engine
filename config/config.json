@@ -143,6 +143,11 @@
     "quests_path": "data/quests"
   },
 
+  "economy": {
+    "shops_path": "data/shops",
+    "starting_currency": 20
+  },
+
   "audio": {
     "enabled": true,
     "master_volume": 0.8,

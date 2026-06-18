@@ -1176,6 +1176,28 @@
        "value": true
       }
      ]
+    },
+    {
+     "id": 7,
+     "name": "merchant",
+     "type": "spawn",
+     "x": 272,
+     "y": 160,
+     "width": 16,
+     "height": 16,
+     "visible": true,
+     "properties": [
+      {
+       "name": "entity",
+       "type": "string",
+       "value": "npc_merchant"
+      },
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
     }
    ]
   }

@@ -280,6 +280,8 @@ class OverworldScene(Scene):
             self._pick_up(entity)
         elif inter.action == "battle":
             self._start_battle([entity.id])
+        elif inter.action == "shop":
+            self.game.scenes.push("shop", shop=inter.params.get("shop", ""))
 
     # -- pickups -------------------------------------------------------------
     def _update_pickups(self) -> None:
