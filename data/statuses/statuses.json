@@ -1,0 +1,6 @@
+{
+  "_comment": "Timed combat status effects. dot = damage per round; attack/defense = stat modifiers while active; duration in rounds.",
+  "poison": { "name": "Poison", "description": "Loses HP each round.", "duration": 3, "dot": 3, "icon_color": [120, 200, 120] },
+  "guard": { "name": "Guard", "description": "Defense raised.", "duration": 2, "defense": 4, "icon_color": [120, 160, 240] },
+  "weaken": { "name": "Weaken", "description": "Defense lowered.", "duration": 2, "defense": -2, "icon_color": [200, 120, 160] }
+}

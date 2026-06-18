@@ -1,0 +1,7 @@
+{
+  "_comment": "Player (and enemy) skills used in combat. type: attack | heal | buff. 'status' applies a data/statuses effect to the target. cost is MP.",
+  "power_strike": { "name": "Power Strike", "description": "A heavy blow for +6 damage.", "type": "attack", "power": 6, "cost": 3, "target": "enemy" },
+  "heal": { "name": "Heal", "description": "Restore 14 HP.", "type": "heal", "power": 14, "cost": 4, "target": "self" },
+  "poison_dart": { "name": "Poison Dart", "description": "A light hit that poisons the foe.", "type": "attack", "power": 2, "cost": 3, "target": "enemy", "status": "poison" },
+  "guard": { "name": "Guard", "description": "Raise defense for 2 turns.", "type": "buff", "power": 0, "cost": 2, "target": "self", "status": "guard" }
+}

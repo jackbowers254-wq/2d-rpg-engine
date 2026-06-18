@@ -162,6 +162,10 @@ class OverworldScene(Scene):
             st = player.get("stats")
             st.attack = g.state.player["attack"]
             st.defense = g.state.player["defense"]
+        if player.has("abilities"):
+            ab = player.get("abilities")
+            ab.mp = g.state.player.get("mp", ab.mp)
+            ab.max_mp = g.state.player.get("max_mp", ab.max_mp)
         return player
 
     # -- per-frame -----------------------------------------------------------
@@ -500,6 +504,8 @@ class OverworldScene(Scene):
             hp = self.player.get("health")
             g.state.player["hp"] = hp.hp
             g.state.player["max_hp"] = hp.max_hp
+        if self.player.has("abilities"):
+            g.state.player["mp"] = self.player.get("abilities").mp
 
     def on_pause(self) -> None:
         # Called when an overlay (pause/dialogue/battle/inventory) is pushed on

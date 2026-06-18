@@ -40,6 +40,8 @@ class GameState:
         self.player = {
             "hp": settings.get("combat.player_hp", 24),
             "max_hp": settings.get("combat.player_hp", 24),
+            "mp": settings.get("combat.player_mp", 12),
+            "max_mp": settings.get("combat.player_mp", 12),
             "attack": settings.get("combat.player_attack", 6),
             "defense": settings.get("combat.player_defense", 2),
             "level": 1,

@@ -58,6 +58,10 @@ class Combatant:
     xp_reward: int = 0
     color: List[int] = field(default_factory=lambda: [220, 220, 220])
     entity: object = None  # optional backing ECS entity
+    mp: int = 0
+    max_mp: int = 0
+    abilities: List[str] = field(default_factory=list)   # known ability ids
+    statuses: List[dict] = field(default_factory=list)   # active status instances
 
     @property
     def alive(self) -> bool:
@@ -67,17 +71,59 @@ class Combatant:
     def fraction(self) -> float:
         return 0.0 if self.max_hp <= 0 else max(0.0, self.hp / self.max_hp)
 
+    # Effective stats include active status modifiers (buffs/debuffs).
+    @property
+    def effective_attack(self) -> int:
+        return max(0, self.attack + sum(s.get("attack", 0) for s in self.statuses))
+
+    @property
+    def effective_defense(self) -> int:
+        return max(0, self.defense + sum(s.get("defense", 0) for s in self.statuses))
+
+    def apply_status(self, status_def) -> str:
+        """Apply (or refresh) a status from a StatusDef. Returns a message."""
+        for s in self.statuses:
+            if s["id"] == status_def.id:
+                s["remaining"] = status_def.duration  # refresh
+                return f"{self.name}'s {status_def.name} refreshed."
+        self.statuses.append({
+            "id": status_def.id, "name": status_def.name,
+            "remaining": status_def.duration, "dot": status_def.dot,
+            "attack": status_def.attack, "defense": status_def.defense,
+        })
+        return f"{self.name} is afflicted with {status_def.name}!"
+
+    def tick_statuses(self) -> List[str]:
+        """Advance statuses one round: apply DoT, expire finished ones."""
+        messages: List[str] = []
+        for s in list(self.statuses):
+            if s.get("dot"):
+                dealt = min(self.hp, s["dot"])
+                self.hp = max(0, self.hp - dealt)
+                messages.append(f"{self.name} takes {dealt} from {s['name']}.")
+            s["remaining"] -= 1
+            if s["remaining"] <= 0:
+                self.statuses.remove(s)
+        if messages:
+            self.sync_to_entity()
+        return messages
+
     def sync_to_entity(self) -> None:
-        """Write HP back to the backing entity's HealthComponent, if any."""
-        if self.entity is not None and self.entity.has("health"):
+        """Write HP/MP back to the backing entity's components, if any."""
+        if self.entity is None:
+            return
+        if self.entity.has("health"):
             self.entity.get("health").hp = max(0, self.hp)
+        if self.entity.has("abilities"):
+            self.entity.get("abilities").mp = max(0, self.mp)
 
     @classmethod
     def from_entity(cls, entity, inventory=None) -> "Combatant":
-        """Build a combatant from an entity's health/stats components."""
+        """Build a combatant from an entity's health/stats/abilities components."""
         health = entity.get("health")
         stats = entity.get("stats")
         sprite = entity.get("sprite")
+        abilities = entity.get("abilities")
         atk = (stats.attack if stats else 3)
         df = (stats.defense if stats else 0)
         if inventory is not None:
@@ -93,6 +139,9 @@ class Combatant:
             xp_reward=(stats.xp_reward if stats else 0),
             color=(sprite.color if sprite and sprite.color else [220, 220, 220]),
             entity=entity,
+            mp=(abilities.mp if abilities else 0),
+            max_mp=(abilities.max_mp if abilities else 0),
+            abilities=list(abilities.known) if abilities else [],
         )
 
 

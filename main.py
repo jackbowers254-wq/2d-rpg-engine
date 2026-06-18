@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import os
 
+from engine.abilities.ability import AbilityDatabase, StatusDatabase
 from engine.core.game import Game
 from engine.graphics.effects import LightingEffect, ParticleSystem
 from engine.inventory.item import ItemDatabase
@@ -51,6 +52,11 @@ def build_services(game: Game) -> None:
 
     game.item_db = ItemDatabase()
     game.item_db.load_dir(s.get("inventory.items_path", os.path.join(data_path, "items")))
+
+    game.ability_db = AbilityDatabase()
+    game.ability_db.load_dir(s.get("combat.abilities_path", os.path.join(data_path, "abilities")))
+    game.status_db = StatusDatabase()
+    game.status_db.load_dir(s.get("combat.statuses_path", os.path.join(data_path, "statuses")))
 
     game.style = UIStyle(s, game.assets)
     game.factory = EntityFactory(game.assets, s, os.path.join(data_path, "entities"))

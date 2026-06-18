@@ -13,7 +13,7 @@ PortalComponent            - an entity-based map transition (alternative to map
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from engine.ecs.component import Component, component
 
@@ -39,3 +39,13 @@ class PortalComponent(Component):
     target_x: float = 0.0   # destination in tiles (converted to px by the scene)
     target_y: float = 0.0
     facing: str = "down"
+
+
+@component("abilities")
+@dataclass
+class AbilitiesComponent(Component):
+    """Known skills + MP, used by combat. Carried by the player (and any enemy
+    that should cast). Pure data: the ids reference data/abilities."""
+    known: list = field(default_factory=list)  # ability ids
+    mp: int = 10
+    max_mp: int = 10

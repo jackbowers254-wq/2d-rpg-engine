@@ -29,10 +29,13 @@ from engine.combat.combat_system import Combatant, CombatSystem, combat_system
 @combat_system("turn_based")
 class TurnBasedCombat(CombatSystem):
     def __init__(self, settings, allies: List[Combatant], enemies: List[Combatant],
-                 *, rng: Optional[random.Random] = None) -> None:
+                 *, rng: Optional[random.Random] = None,
+                 ability_db=None, status_db=None) -> None:
         super().__init__(settings, allies, enemies)
         self.rng = rng or random.Random()
         self.flee_chance = settings.get("combat.flee_chance", 0.5)
+        self.ability_db = ability_db
+        self.status_db = status_db
         self._outcome: Optional[str] = None  # None | victory | defeat | fled
         self.log: List[str] = ["A wild encounter!"]
 
@@ -46,7 +49,7 @@ class TurnBasedCombat(CombatSystem):
         return [c for c in self.enemies if c.alive]
 
     def _resolve_attack(self, attacker: Combatant, defender: Combatant) -> str:
-        base = attacker.attack - defender.defense
+        base = attacker.effective_attack - defender.effective_defense
         dmg = max(1, base) + self.rng.randint(0, 1)
         defender.hp = max(0, defender.hp - dmg)
         defender.sync_to_entity()
@@ -66,6 +69,18 @@ class TurnBasedCombat(CombatSystem):
         self._check_victory()
         return out
 
+    def _end_round(self) -> List[str]:
+        """Tick status effects (DoT, expiry) on everyone after the round."""
+        out: List[str] = []
+        for c in [self.hero] + self.enemies:
+            if c.alive:
+                out += c.tick_statuses()
+        if not self.hero.alive and self._outcome is None:
+            self._outcome = "defeat"
+            out.append(f"{self.hero.name} has fallen...")
+        self._check_victory()
+        return out
+
     def _check_victory(self) -> None:
         if self._outcome is None and not self.living_enemies:
             self._outcome = "victory"
@@ -81,6 +96,46 @@ class TurnBasedCombat(CombatSystem):
         self._check_victory()
         if self._outcome is None:
             out += self._enemy_phase()
+        if self._outcome is None:
+            out += self._end_round()
+        self.log += out
+        return out
+
+    def player_use_ability(self, ability_id: str, target: Optional[Combatant] = None) -> List[str]:
+        if self.is_over or self.ability_db is None:
+            return []
+        ab = self.ability_db.get(ability_id)
+        if ab is None:
+            return ["Nothing happens."]
+        if self.hero.mp < ab.cost:
+            return ["Not enough MP!"]
+        self.hero.mp -= ab.cost
+        tgt = self.hero if ab.target == "self" else (
+            target or (self.living_enemies[0] if self.living_enemies else None))
+        out = [f"{self.hero.name} uses {ab.name}!"]
+        if tgt is not None:
+            if ab.type == "attack":
+                dmg = max(1, self.hero.effective_attack + ab.power - tgt.effective_defense) \
+                    + self.rng.randint(0, 1)
+                tgt.hp = max(0, tgt.hp - dmg)
+                tgt.sync_to_entity()
+                out.append(f"{tgt.name} takes {dmg}!"
+                           + (f" {tgt.name} is defeated!" if not tgt.alive else ""))
+            elif ab.type == "heal":
+                healed = min(tgt.max_hp - tgt.hp, ab.power)
+                tgt.hp += healed
+                tgt.sync_to_entity()
+                out.append(f"Restored {healed} HP.")
+            if ab.status and self.status_db is not None and tgt.alive:
+                sd = self.status_db.get(ab.status)
+                if sd:
+                    out.append(tgt.apply_status(sd))
+        self.hero.sync_to_entity()
+        self._check_victory()
+        if self._outcome is None:
+            out += self._enemy_phase()
+        if self._outcome is None:
+            out += self._end_round()
         self.log += out
         return out
 
@@ -94,6 +149,8 @@ class TurnBasedCombat(CombatSystem):
         out = [msg if ok else "It had no effect."]
         if self._outcome is None:
             out += self._enemy_phase()
+        if self._outcome is None:
+            out += self._end_round()
         self.log += out
         return out
 
@@ -106,6 +163,8 @@ class TurnBasedCombat(CombatSystem):
         else:
             out = ["Couldn't escape!"]
             out += self._enemy_phase()
+            if self._outcome is None:
+                out += self._end_round()
         self.log += out
         return out
 

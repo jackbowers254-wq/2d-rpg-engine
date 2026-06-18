@@ -48,17 +48,20 @@ class BattleScene(Scene):
         if not enemies:  # safety net
             enemies = [Combatant("Slime", 8, 8, 4, 1, xp_reward=8, color=[120, 200, 130])]
 
-        self.combat = create_combat(g.settings, [self.hero], enemies)
+        self.combat = create_combat(g.settings, [self.hero], enemies,
+                                    ability_db=getattr(g, "ability_db", None),
+                                    status_db=getattr(g, "status_db", None))
 
-        self.state = "command"          # command | item | message
+        self.state = "command"          # command | item | skill | message
         self._messages = []
         self._ending = None
-        self.command_menu = Menu([
-            MenuItem("Attack", "attack"),
-            MenuItem("Item", "item"),
-            MenuItem("Flee", "flee"),
-        ], self.style)
+        commands = [MenuItem("Attack", "attack")]
+        if self.hero.abilities:
+            commands.append(MenuItem("Skill", "skill"))
+        commands += [MenuItem("Item", "item"), MenuItem("Flee", "flee")]
+        self.command_menu = Menu(commands, self.style)
         self.item_menu = None
+        self.skill_menu = None
         self._log_line = self.combat.log[-1] if self.combat.log else ""
         g.audio.play_music("battle.wav")  # crossfade into battle music
 
@@ -72,6 +75,8 @@ class BattleScene(Scene):
             self._update_command(inp)
         elif self.state == "item":
             self._update_item(inp)
+        elif self.state == "skill":
+            self._update_skill(inp)
 
     def _update_message(self, inp) -> None:
         if inp.just_pressed("confirm") or inp.just_pressed("interact"):
@@ -94,6 +99,8 @@ class BattleScene(Scene):
                 self._enqueue(self.combat.player_flee())
             elif choice == "item":
                 self._open_items()
+            elif choice == "skill":
+                self._open_skills()
 
     def _update_item(self, inp) -> None:
         if inp.just_pressed("up"):
@@ -107,7 +114,34 @@ class BattleScene(Scene):
             if item_id:
                 self._enqueue(self.combat.player_use_item(item_id, self.game.state.inventory))
 
+    def _update_skill(self, inp) -> None:
+        if inp.just_pressed("up"):
+            self.skill_menu.move(-1)
+        if inp.just_pressed("down"):
+            self.skill_menu.move(1)
+        if inp.just_pressed("cancel") or inp.just_pressed("menu"):
+            self.state = "command"
+        if inp.just_pressed("confirm") or inp.just_pressed("interact"):
+            ability_id = self.skill_menu.selected.value
+            if ability_id:
+                self._enqueue(self.combat.player_use_ability(ability_id))
+
     # -- helpers -------------------------------------------------------------
+    def _open_skills(self) -> None:
+        db = getattr(self.game, "ability_db", None)
+        items = []
+        for aid in self.hero.abilities:
+            ab = db.get(aid) if db else None
+            if ab is None:
+                continue
+            usable = self.hero.mp >= ab.cost
+            items.append(MenuItem(f"{ab.name}  {ab.cost}MP", aid, enabled=usable))
+        if not items:
+            self._enqueue(["No skills available!"])
+            return
+        self.skill_menu = Menu(items, self.style, title="Skill")
+        self.state = "skill"
+
     def _open_items(self) -> None:
         inv = self.game.state.inventory
         consumables = []
@@ -144,8 +178,9 @@ class BattleScene(Scene):
         g = self.game
         res = self.combat.result
         self._ending = res["outcome"]
-        # Persist hero HP back to the shared state.
+        # Persist hero HP + MP back to the shared state.
         g.state.player["hp"] = max(0, self.hero.hp)
+        g.state.player["mp"] = max(0, self.hero.mp)
 
         if res["outcome"] == "victory":
             leveled = g.state.grant_xp(res["xp"])
@@ -197,7 +232,16 @@ class BattleScene(Scene):
                            layer="entities", world=False)
         self.hpbar.draw(renderer, 20, bh - 84,
                         self.hero.fraction,
-                        label=f"{self.hero.name}  {self.hero.hp}/{self.hero.max_hp}")
+                        label=f"{self.hero.name}  HP {self.hero.hp}/{self.hero.max_hp}")
+        if self.hero.max_mp:
+            renderer.draw_text(f"MP {self.hero.mp}/{self.hero.max_mp}", 20, bh - 64,
+                               s.font, (150, 190, 255), layer="ui", world=False)
+        # Active status icons on the hero.
+        sx = 20
+        for st in self.hero.statuses:
+            renderer.draw_text(f"{st['name'][:3]}", sx, bh - 56, s.font,
+                               s.highlight_color, layer="ui", world=False)
+            sx += 22
 
         # Bottom panel: command menu OR message log.
         panel = Panel(6, bh - 46, bw - 12, 40, s)
@@ -208,6 +252,8 @@ class BattleScene(Scene):
             self._draw_commands_row(renderer, panel)
         elif self.state == "item" and self.item_menu:
             self.item_menu.draw(renderer, panel.inner_x, panel.inner_y)
+        elif self.state == "skill" and self.skill_menu:
+            self.skill_menu.draw(renderer, panel.inner_x, panel.inner_y)
         else:  # message
             renderer.draw_text(self._log_line, panel.inner_x, panel.inner_y + 6,
                                s.font, s.text_color, layer="ui", world=False)

@@ -11,6 +11,7 @@
     "collider": { "w": 10, "h": 7, "offset_x": 3, "offset_y": 8, "solid": true },
     "health": { "hp": 24, "max_hp": 24 },
     "stats": { "attack": 6, "defense": 2, "xp_reward": 0 },
+    "abilities": { "known": ["power_strike", "heal", "poison_dart", "guard"], "mp": 12, "max_mp": 12 },
     "player_controlled": {}
   }
 }

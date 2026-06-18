@@ -14,6 +14,7 @@ from engine.ecs.components.movement import MovementComponent
 from engine.ecs.components.sprite import SpriteComponent
 from engine.ecs.components.stats import StatsComponent
 from engine.ecs.components.tags import (
+    AbilitiesComponent,
     PickupComponent,
     PlayerControlledComponent,
     PortalComponent,
@@ -29,6 +30,7 @@ __all__ = [
     "MovementComponent",
     "SpriteComponent",
     "StatsComponent",
+    "AbilitiesComponent",
     "PickupComponent",
     "PlayerControlledComponent",
     "PortalComponent",
