@@ -31,6 +31,7 @@ from typing import Any, Optional
 import pygame
 
 from engine.assets.asset_manager import AssetManager
+from engine.core.debug import DebugOverlay
 from engine.core.events import EventBus
 from engine.core.scene_manager import SceneManager
 from engine.graphics.renderer import PygameRenderer
@@ -71,6 +72,9 @@ class Game:
         self._show_fps = self.settings.get("display.show_fps", False)
         self._fps_font = self.assets.get_font(self.settings.get("ui.font_size", 8))
 
+        # Runtime debug overlay (toggle with the 'debug_toggle' action / F1).
+        self.debug = DebugOverlay(self)
+
     # -- audio ---------------------------------------------------------------
     def _init_audio(self) -> None:
         if not self.settings.get("audio.enabled", True):
@@ -98,6 +102,7 @@ class Game:
             self._process_events()
             if not self.running:
                 break
+            self.debug.update()
             self.scenes.update(dt)
             if self.scenes.is_empty:  # last scene popped itself -> exit
                 self.running = False
@@ -119,10 +124,11 @@ class Game:
     def _render(self) -> None:
         self.renderer.begin_frame()
         self.scenes.draw(self.renderer)
-        if self._show_fps:
+        if self._show_fps and not self.debug.visible:
             fps = f"{self.clock.get_fps():4.0f} fps"
             self.renderer.draw_text(fps, 2, 1, self._fps_font, (180, 255, 180),
                                     layer="overlay", world=False)
+        self.debug.draw(self.renderer)
         self.renderer.end_frame()
 
     # -- shutdown ------------------------------------------------------------
