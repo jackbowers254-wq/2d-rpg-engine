@@ -105,6 +105,8 @@ class Game:
             if not self.running:
                 break
             self.debug.update()
+            if self.input.just_pressed("postfx_toggle") and getattr(self, "postfx", None):
+                self.postfx.toggle_preset()
             self.audio.update(dt)
             self.renderer.update_effects(dt)
             self.scenes.update(dt)

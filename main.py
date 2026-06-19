@@ -26,6 +26,7 @@ from engine.economy.shop import ShopDatabase
 from engine.graphics.daynight import DayNightCycle
 from engine.graphics.effects import LightingEffect, ParticleSystem
 from engine.graphics.palette import PaletteManager
+from engine.graphics.postprocess import PostProcessStack
 from engine.inventory.item import ItemDatabase
 from engine.map.world_map import WorldMap
 from engine.quests.manager import QuestManager
@@ -96,6 +97,11 @@ def build_services(game: Game) -> None:
         if "particles" in names:
             game.particles = ParticleSystem(chunky=s.get("render.particle_size", 2))
             game.renderer.add_effect(game.particles)
+
+    # Retro post-processing chain (registered last so it runs after lighting;
+    # all effects default OFF -- toggle the CRT preset in-game with F2).
+    game.postfx = PostProcessStack(s)
+    game.renderer.add_effect(game.postfx)
 
     game.world = None  # set by the overworld scene when active
 

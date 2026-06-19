@@ -43,6 +43,13 @@
     "torch_color": [255, 226, 170],
     "light_bands": 4,
     "particle_size": 2,
+    "post": {
+      "scanlines": { "enabled": false, "intensity": 0.22 },
+      "vignette": { "enabled": false, "intensity": 0.5 },
+      "chromatic": { "enabled": false, "offset": 1 },
+      "bloom": { "enabled": false, "strength": 70, "scale": 4 },
+      "color_grade": { "enabled": false, "tint": [255, 244, 222] }
+    },
     "day_night": {
       "enabled": true,
       "period": 120,
@@ -100,7 +107,8 @@
       "right": ["d", "right"],
       "quicksave": ["f5"],
       "quickload": ["f9"],
-      "debug_toggle": ["f1"]
+      "debug_toggle": ["f1"],
+      "postfx_toggle": ["f2"]
     }
   },
 
