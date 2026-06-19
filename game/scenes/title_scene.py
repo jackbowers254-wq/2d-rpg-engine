@@ -7,7 +7,10 @@ Game creates a fresh GameState; Continue loads slot 1; Quit exits.
 
 from __future__ import annotations
 
+import os
+
 from engine.core.scene import Scene
+from engine.graphics.parallax import ParallaxBackground
 from engine.ui.menu import Menu, MenuItem
 from game.state import GameState
 
@@ -24,7 +27,15 @@ class TitleScene(Scene):
             MenuItem("Quit", "quit"),
         ], self.style)
 
+        # Auto-scrolling parallax backdrop (data-driven).
+        self.scroll = 0.0
+        self.parallax = None
+        path = os.path.join(g.settings.get("game.data_path", "data"), "parallax", "title.json")
+        if os.path.isfile(path):
+            self.parallax = ParallaxBackground(g.assets.load_json(path).get("layers", []), g.assets)
+
     def update(self, dt: float) -> None:
+        self.scroll += dt * 18  # drift the backdrop
         inp = self.game.input
         if inp.just_pressed("up"):
             self.menu.move(-1)
@@ -52,6 +63,8 @@ class TitleScene(Scene):
     def draw(self, renderer) -> None:
         s = self.style
         bw, bh = renderer.base_size
+        if self.parallax is not None:
+            self.parallax.draw(renderer, self.scroll)
         title = self.game.settings.get("game.title", "RPG")
         renderer.draw_text(title, bw // 2, bh // 3, s.title_font, s.highlight_color,
                            layer="ui", world=False, anchor="center")

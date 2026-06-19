@@ -1,0 +1,10 @@
+{
+  "_comment": "Parallax backdrop for the title screen. Layers scroll at different 'factor' speeds for depth. All generated (no art).",
+  "layers": [
+    { "kind": "fill", "color": [26, 28, 52] },
+    { "kind": "dots", "color": [200, 210, 255], "y": 2, "y2": 70, "size": 1, "spacing": 14, "factor": 0.15, "seed": 7 },
+    { "kind": "bumps", "color": [40, 44, 84], "y": 96, "radius": 30, "spacing": 70, "factor": 0.25 },
+    { "kind": "bumps", "color": [34, 60, 70], "y": 120, "radius": 26, "spacing": 54, "factor": 0.5 },
+    { "kind": "bumps", "color": [30, 80, 64], "y": 150, "radius": 22, "spacing": 40, "factor": 0.85 }
+  ]
+}

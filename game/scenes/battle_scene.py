@@ -94,6 +94,7 @@ class BattleScene(Scene):
             choice = self.command_menu.selected.value
             if choice == "attack":
                 self.game.audio.play_sound("hit.wav")
+                self.game.renderer.add_shake(2.0, 0.16)
                 self._enqueue(self.combat.player_attack())
             elif choice == "flee":
                 self._enqueue(self.combat.player_flee())
