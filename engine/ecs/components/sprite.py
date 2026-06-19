@@ -30,6 +30,7 @@ class SpriteComponent(Component):
     offset: List[int] = field(default_factory=lambda: [0, 0])  # draw offset (px)
     visible: bool = True
     y_sort: bool = True                      # sort by feet within y-sort layers
+    palette: Optional[str] = None            # runtime palette-swap id (recolour)
 
     def __post_init__(self) -> None:
         # Runtime-only cache of the resolved pygame surface (not serialized).
@@ -39,5 +40,5 @@ class SpriteComponent(Component):
         return {
             "image": self.image, "color": self.color, "size": self.size,
             "layer": self.layer, "offset": self.offset,
-            "visible": self.visible, "y_sort": self.y_sort,
+            "visible": self.visible, "y_sort": self.y_sort, "palette": self.palette,
         }

@@ -1,0 +1,8 @@
+{
+  "_comment": "Palette swaps recolour shared art at runtime. 'hunter_red' reuses the green slime sprite for the red hunter (maps the slime's body greens to reds; eyes/flash unchanged).",
+  "hunter_red": {
+    "#6ec878": "#d26e6e",
+    "#469655": "#964646"
+  },
+  "retro8": ["#1a1c2c", "#5d275d", "#b13e53", "#ef7d57", "#ffcd75", "#a7f070", "#38b764", "#257179", "#29366f", "#3b5dc9", "#41a6f6", "#73eff7", "#f4f4f4", "#94b0c2", "#566c86", "#333c57"]
+}

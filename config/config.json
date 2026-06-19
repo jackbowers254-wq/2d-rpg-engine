@@ -164,7 +164,8 @@
     "audio": "assets/audio",
     "fonts": "assets/fonts",
     "scale_set": "1x",
-    "missing_texture_color": [255, 0, 220]
+    "missing_texture_color": [255, 0, 220],
+    "palettes_path": "data/palettes"
   },
 
   "save": {

@@ -70,7 +70,7 @@ class OverworldScene(Scene):
         self.world.add_system(AISystem())
         self.world.add_system(MovementSystem())
         self.world.add_system(AnimationSystem(g.assets))
-        self.render_system = RenderSystem(g.assets, g.settings)
+        self.render_system = RenderSystem(g.assets, g.settings, palettes=getattr(g, "palettes", None))
         g.world = self.world  # expose for overlays (inventory/battle)
 
         # Combat style is a config switch: "encounter" (turn-based battle scene)
@@ -219,6 +219,7 @@ class OverworldScene(Scene):
         # Advance simulation (movement, collision, AI). Removal flush happens here,
         # so a just-defeated enemy can't re-trigger below.
         self.world.update(dt)  # includes the AnimationSystem
+        self.render_system.update_flashes(dt)
 
         # Camera follows the player centre.
         t = self.player.get("transform")
@@ -524,6 +525,9 @@ class OverworldScene(Scene):
     # -- combat feedback (sfx + particles) ----------------------------------
     def _on_entity_damaged(self, entity=None, **_kw) -> None:
         self.game.audio.play_sound("hit.wav")
+        if entity is not None:
+            self.render_system.flash(entity.id)             # white hit-flash
+        self.game.renderer.add_shake(2.5, 0.18)             # screen shake
         if self.game.particles is not None and entity is not None and entity.has("transform"):
             t = entity.get("transform")
             self.game.particles.emit_burst(t.x + 8, t.y + 8, count=8, speed=55,

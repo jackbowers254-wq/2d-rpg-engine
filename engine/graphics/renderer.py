@@ -173,6 +173,10 @@ class PygameRenderer(Renderer):
         self._dest_rect = pygame.Rect(0, 0, *win_size)
         self._recompute_scale(win_size)
 
+        # Screen shake state (base-resolution pixels of amplitude).
+        self._shake_amp = 0.0
+        self._shake_t = 0.0
+
     @staticmethod
     def _resolve_scaling_mode(d) -> str:
         """Pick a scaling mode, honouring the modern key then the Gen 1 booleans."""
@@ -272,7 +276,14 @@ class PygameRenderer(Renderer):
         self.window.fill(self._letterbox_color)
         scaler = pygame.transform.smoothscale if self._smooth else pygame.transform.scale
         scaled = scaler(self.base, self._dest_rect.size)
-        self.window.blit(scaled, self._dest_rect.topleft)
+        dest = self._dest_rect.topleft
+        if self._shake_t > 0 and self._shake_amp > 0:
+            import random
+            scale = self._dest_rect.width / self._base_w
+            ox = random.uniform(-self._shake_amp, self._shake_amp) * scale
+            oy = random.uniform(-self._shake_amp, self._shake_amp) * scale
+            dest = (dest[0] + int(ox), dest[1] + int(oy))
+        self.window.blit(scaled, dest)
         pygame.display.flip()
 
     # -- primitive queue methods --------------------------------------------
@@ -319,6 +330,15 @@ class PygameRenderer(Renderer):
         log.info("Registered render effect: %s", type(effect).__name__)
 
     def update_effects(self, dt: float) -> None:
-        """Advance time-based effects (particles, day/night). Called per frame."""
+        """Advance time-based effects (particles, day/night) + screen shake."""
         for effect in self._effects:
             effect.update(dt)
+        if self._shake_t > 0:
+            self._shake_t -= dt
+            if self._shake_t <= 0:
+                self._shake_amp = 0.0
+
+    def add_shake(self, amplitude: float, duration: float) -> None:
+        """Trigger a screen shake (amplitude in base-resolution pixels)."""
+        self._shake_amp = max(self._shake_amp, amplitude)
+        self._shake_t = max(self._shake_t, duration)

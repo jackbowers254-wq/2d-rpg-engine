@@ -26,12 +26,31 @@ from engine.utils.geometry import clamp
 
 
 class RenderSystem:
-    def __init__(self, assets, settings) -> None:
+    def __init__(self, assets, settings, palettes=None) -> None:
         self.assets = assets
         self.settings = settings
+        self.palettes = palettes               # optional PaletteManager (recolour)
         self.sprite_scale = settings.get("world.sprite_scale", 1.0)
         self.debug_colliders = settings.get("debug.show_colliders", False)
         self._scaled_cache = {}  # id(surface) -> scaled surface
+        self._flash_cache = {}   # id(surface) -> whitened surface
+        self.flashes = {}        # entity_id -> remaining flash seconds (hit-flash)
+
+    def flash(self, entity_id: int, duration: float = 0.12) -> None:
+        """Trigger a white hit-flash on an entity (pixel-art damage feedback)."""
+        self.flashes[entity_id] = duration
+
+    def update_flashes(self, dt: float) -> None:
+        if self.flashes:
+            self.flashes = {k: v - dt for k, v in self.flashes.items() if v - dt > 0}
+
+    def _whiten(self, surf):
+        cached = self._flash_cache.get(id(surf))
+        if cached is None:
+            cached = surf.copy()
+            cached.fill((180, 180, 180), special_flags=pygame.BLEND_RGB_ADD)
+            self._flash_cache[id(surf)] = cached
+        return cached
 
     # -- surface resolution --------------------------------------------------
     def _apply_scale(self, surf: pygame.Surface) -> pygame.Surface:
@@ -55,6 +74,8 @@ class RenderSystem:
             color = tuple(sprite.color) if sprite.color else (255, 0, 220)
             w, h = sprite.size
             surf = self.assets.placeholder(w, h, color)
+        if sprite.palette and self.palettes:
+            surf = self.palettes.recolor(surf, sprite.palette)
         surf = self._apply_scale(surf)
         sprite._surface = surf
         return surf
@@ -69,9 +90,14 @@ class RenderSystem:
             # Prefer an active animation frame; fall back to the static sprite.
             anim = e.get("animation")
             if anim is not None and getattr(anim, "current_surface", None) is not None:
-                surf = self._apply_scale(anim.current_surface)
+                frame = anim.current_surface
+                if sprite.palette and self.palettes:        # runtime recolour
+                    frame = self.palettes.recolor(frame, sprite.palette)
+                surf = self._apply_scale(frame)
             else:
                 surf = self._surface_for(sprite)
+            if self.flashes.get(e.id):                       # white hit-flash
+                surf = self._whiten(surf)
             x = t.x + sprite.offset[0]
             y = t.y + sprite.offset[1]
             sort_y = (t.y + surf.get_height()) if sprite.y_sort else None
