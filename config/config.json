@@ -41,7 +41,20 @@
     "lighting_layer": "overhead",
     "torch_radius": 56,
     "torch_color": [255, 226, 170],
-    "particle_size": 2
+    "light_bands": 4,
+    "particle_size": 2,
+    "day_night": {
+      "enabled": true,
+      "period": 120,
+      "start": 0.12,
+      "keyframes": [
+        { "t": 0.0, "color": [255, 255, 255] },
+        { "t": 0.45, "color": [235, 205, 180] },
+        { "t": 0.6, "color": [120, 110, 165] },
+        { "t": 0.75, "color": [70, 78, 120] },
+        { "t": 0.9, "color": [120, 110, 165] }
+      ]
+    }
   },
 
   "transitions": {

@@ -47,12 +47,15 @@ class RenderEffect:
 
 class LightingEffect(RenderEffect):
     def __init__(self, after_layer_name: str = "overhead",
-                 ambient: Color = (255, 255, 255)) -> None:
+                 ambient: Color = (255, 255, 255), bands: int = 0) -> None:
         self._after = after_layer_name
         self.ambient: Color = ambient
+        # bands > 0 quantizes the light falloff into N steps -> crisp pixel-art
+        # light pools instead of a smooth modern gradient.
+        self.bands = bands
         # Each light: (world_x, world_y, radius, color)
         self.lights: List[Tuple[float, float, float, Color]] = []
-        self._tex_cache: Dict[Tuple[int, Color], pygame.Surface] = {}
+        self._tex_cache: Dict[Tuple[int, Color, int], pygame.Surface] = {}
 
     # -- light management (called by game code each frame) -------------------
     def set_ambient(self, color: Color) -> None:
@@ -66,16 +69,23 @@ class LightingEffect(RenderEffect):
         self.lights.append((world_x, world_y, radius, color))
 
     def _light_texture(self, radius: int, color: Color) -> pygame.Surface:
-        key = (radius, color)
+        key = (radius, color, self.bands)
         tex = self._tex_cache.get(key)
         if tex is None:
             tex = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-            # Smooth-ish radial falloff (Phase C banding makes this pixel-art crisp).
             for r in range(radius, 0, -1):
-                a = int(255 * (1 - r / radius) ** 1.6)
-                pygame.draw.circle(tex, (*color, a), (radius, radius), r)
+                a = (1 - r / radius) ** 1.6
+                if self.bands > 0:            # quantize falloff into discrete steps
+                    a = round(a * self.bands) / self.bands
+                pygame.draw.circle(tex, (*color, int(255 * a)), (radius, radius), r)
             self._tex_cache[key] = tex
         return tex
+
+    # NORMAL-MAP EXTENSION HOOK: for directional lighting you would, here, sample
+    # a per-sprite normal map and modulate each light's contribution by
+    # dot(normal, light_dir). It is intentionally left out of the CPU pass for
+    # performance; a moderngl renderer (same Renderer interface) is the right
+    # place to add it. The data seam is a `normal_map` image alongside a sprite.
 
     def after_layer(self, layer_name, surface, renderer):
         if not self.enabled or layer_name != self._after:

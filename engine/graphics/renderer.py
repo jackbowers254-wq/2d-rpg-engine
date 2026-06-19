@@ -255,14 +255,14 @@ class PygameRenderer(Renderer):
         # 1) Flush layered draw queue in configured order.
         for name in self._layer_order:
             q = self._queues.get(name)
-            if not q:
-                continue
-            if name in self._y_sort:
-                q.sort(key=lambda c: c.sort_y)
-            for cmd in q:
-                cmd.execute(self.base)
-            # EXTENSION HOOK: per-layer effects (e.g. lighting applied above
-            # the world but below the UI) run here.
+            if q:
+                if name in self._y_sort:
+                    q.sort(key=lambda c: c.sort_y)
+                for cmd in q:
+                    cmd.execute(self.base)
+            # EXTENSION HOOK: per-layer effects (e.g. lighting applied above the
+            # world but below the UI) run for EVERY configured layer, even empty
+            # ones -- so an effect can target a layer that holds no tiles itself.
             for effect in self._effects:
                 effect.after_layer(name, self.base, self)
 

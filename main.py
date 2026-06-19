@@ -23,6 +23,7 @@ import os
 from engine.abilities.ability import AbilityDatabase, StatusDatabase
 from engine.core.game import Game
 from engine.economy.shop import ShopDatabase
+from engine.graphics.daynight import DayNightCycle
 from engine.graphics.effects import LightingEffect, ParticleSystem
 from engine.graphics.palette import PaletteManager
 from engine.inventory.item import ItemDatabase
@@ -84,10 +85,13 @@ def build_services(game: Game) -> None:
     # renderer; scenes drive lights / emit particles through these handles.
     game.lighting = None
     game.particles = None
+    game.daynight = DayNightCycle(s)
     if s.get("render.effects_enabled", False):
         names = s.get("render.effects", [])
         if "lighting" in names:
-            game.lighting = LightingEffect(after_layer_name=s.get("render.lighting_layer", "overhead"))
+            game.lighting = LightingEffect(
+                after_layer_name=s.get("render.lighting_layer", "overhead"),
+                bands=s.get("render.light_bands", 0))
             game.renderer.add_effect(game.lighting)
         if "particles" in names:
             game.particles = ParticleSystem(chunky=s.get("render.particle_size", 2))

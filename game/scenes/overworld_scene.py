@@ -220,6 +220,8 @@ class OverworldScene(Scene):
         # so a just-defeated enemy can't re-trigger below.
         self.world.update(dt)  # includes the AnimationSystem
         self.render_system.update_flashes(dt)
+        if getattr(self.game, "daynight", None):
+            self.game.daynight.update(dt)
 
         # Camera follows the player centre.
         t = self.player.get("transform")
@@ -573,7 +575,12 @@ class OverworldScene(Scene):
             return
         props = self.world.tilemap.properties
         amb = props.get("ambient")
-        ambient = self._parse_color(amb) if amb else (255, 255, 255)
+        if amb:                                  # indoor: fixed ambient (e.g. cave)
+            ambient = self._parse_color(amb)
+        elif getattr(self.game, "daynight", None) and self.game.daynight.enabled:
+            ambient = self.game.daynight.ambient()   # outdoor: day/night cycle
+        else:
+            ambient = (255, 255, 255)
         light.set_ambient(ambient)
         light.clear_lights()
         if ambient == (255, 255, 255):
