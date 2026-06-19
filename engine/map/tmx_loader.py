@@ -175,5 +175,8 @@ def load_tiled_map(path: str, settings, assets=None) -> TileMap:
             tmap.object_groups[layer.get("name", "objects")] = objs
 
     tmap.finalize()
+    # Autotiling: replace cells in 'autotile' layers with edge/corner variants.
+    from engine.map.autotile import apply_autotiling
+    apply_autotiling(tmap)
     log.info("Loaded map '%s' (%dx%d tiles @ %dpx)", name, tmap.width, tmap.height, tile_size)
     return tmap

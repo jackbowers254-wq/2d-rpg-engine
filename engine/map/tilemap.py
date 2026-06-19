@@ -44,6 +44,8 @@ class TileLayer:
     visible: bool = True
     collision: bool = False                            # whole layer marks solidity
     properties: Dict = field(default_factory=dict)
+    # Per-cell rendered-surface overrides (e.g. autotiling edge variants).
+    overrides: Dict = field(default_factory=dict)      # {(tx, ty): Surface}
 
     def gid_at(self, tx: int, ty: int) -> int:
         if 0 <= tx < self.width and 0 <= ty < self.height:
@@ -169,7 +171,8 @@ class TileMap:
                     gid = layer.data[row + tx]
                     if gid == 0:
                         continue
-                    surf = self._tile_surface(gid)
+                    # Autotiling (and similar) can override a cell's surface.
+                    surf = layer.overrides.get((tx, ty)) or self._tile_surface(gid)
                     if surf is not None:
                         renderer.draw_image(surf, tx * ts, ty * ts,
                                             layer=layer.render_layer, world=True,
